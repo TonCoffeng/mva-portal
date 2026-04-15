@@ -124,6 +124,19 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       </div>
     </a>
+    <a href="#" class="card" onclick="return false;" style="animation-delay:240ms;cursor:default">
+      <div class="card-top">
+        <div class="card-icon ic-orange">&#128205;</div>
+        <div class="card-info">
+          <div class="card-title">Makelaar van Dienst</div>
+          <div class="card-desc" id="mavd-desc">Laden...</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-tag tag-live" id="mavd-tag">Nu</span>
+        <div style="font-size:12px;color:#B0ACA2" id="mavd-next"></div>
+      </div>
+    </a>
 
   <div class="section-title">Binnenkort beschikbaar</div>
   <div class="grid">
@@ -175,5 +188,54 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 <div class="footer">
   <b>MvA Intelligence</b> &middot; MakelaarsVan Amsterdam &middot; 2026
 </div>
+
+<script>
+(function(){
+  var MAVD = {
+    1: ['Anthonie Schilder','Mathias Elias'],
+    2: ['Pelle Freijsen','Jori Netiv'],
+    3: ['Rogier de Vries','Koen Buser'],
+    4: ['Maurits van Leeuwen','Jan Jaap ten Arve'],
+    5: ['Maurits Rodermond','Wilma Out']
+  };
+  var DAG = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+  function update(){
+    var now = new Date();
+    var d = now.getDay();
+    var h = now.getHours();
+    var desc = document.getElementById('mavd-desc');
+    var tag = document.getElementById('mavd-tag');
+    var next = document.getElementById('mavd-next');
+    if(!desc) return;
+    if(d >= 1 && d <= 5){
+      var pair = MAVD[d];
+      var isOchtend = h < 13;
+      var current = isOchtend ? pair[0] : pair[1];
+      var slot = isOchtend ? '09:00 - 13:00' : '13:00 - 17:00';
+      var inDienst = h >= 9 && h < 17;
+      if(inDienst){
+        desc.innerHTML = '<b style="color:#1A2B5F;font-size:15px">'+current+'</b><br><span style="font-size:12px;color:#6B6760">Dienst: '+slot+'</span>';
+        tag.textContent = 'Nu in dienst';
+        tag.style.background = '#EAF3DE'; tag.style.color = '#27500A';
+        var nextName = isOchtend ? pair[1] : (MAVD[d<5?d+1:1][0]);
+        var nextSlot = isOchtend ? '13:00 - 17:00' : (d<5?DAG[d+1]+' 09:00':'maandag 09:00');
+        next.textContent = 'Daarna: '+nextName+' ('+nextSlot+')';
+      } else {
+        desc.innerHTML = '<span style="color:#B0ACA2">Buiten diensttijden</span><br><span style="font-size:12px;color:#B0ACA2">Dienst: 09:00 - 17:00</span>';
+        tag.textContent = DAG[d];
+        tag.style.background = '#F0EEE9'; tag.style.color = '#B0ACA2';
+        next.textContent = 'Morgen: '+(d<5?MAVD[d+1][0]:MAVD[1][0])+' (09:00)';
+      }
+    } else {
+      desc.innerHTML = '<span style="color:#B0ACA2">Weekend — geen dienst</span>';
+      tag.textContent = 'Weekend';
+      tag.style.background = '#F0EEE9'; tag.style.color = '#B0ACA2';
+      next.textContent = 'Maandag: '+MAVD[1][0]+' (09:00 - 13:00)';
+    }
+  }
+  update();
+  setInterval(update, 60000);
+})();
+</script>
 </body>
 </html>
