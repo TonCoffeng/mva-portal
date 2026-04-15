@@ -16,7 +16,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 .logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase}
 .header-right{font-size:12px;color:rgba(255,255,255,.5)}
 .hero{background:#1A2B5F;padding:2.5rem 2rem 3rem;text-align:center}
-.hero h1{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;font-weight:400;line-height:1.2;margin-bottom:.5rem}
+.hero h1{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;font-weight:400;margin-bottom:.5rem}
 .hero p{font-size:14px;color:rgba(255,255,255,.6);max-width:480px;margin:0 auto}
 .main{max-width:1100px;margin:-1.5rem auto 0;padding:0 2rem 4rem;position:relative;z-index:1}
 .section-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#B0ACA2;margin-bottom:1rem;margin-top:2.5rem}
@@ -26,23 +26,29 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 .card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(26,43,95,.12)}
 .card-top{padding:1.4rem 1.4rem 1rem;display:flex;align-items:flex-start;gap:14px}
 .card-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
-.ic-blue{background:#E6F1FB}
-.ic-orange{background:#FAEEDA}
-.ic-green{background:#EAF3DE}
-.ic-purple{background:#EEEDFE}
-.ic-navy{background:#1A2B5F}
-.card-info{}
+.ic-blue{background:#E6F1FB}.ic-orange{background:#FAEEDA}.ic-green{background:#EAF3DE}.ic-purple{background:#EEEDFE}
 .card-title{font-size:16px;font-weight:600;color:#1A2B5F;margin-bottom:4px;line-height:1.2}
 .card-desc{font-size:13px;color:#6B6760;line-height:1.55}
 .card-footer{padding:.8rem 1.4rem;border-top:1px solid #F0EEE9;display:flex;align-items:center;justify-content:space-between}
 .card-tag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px}
 .tag-live{background:#EAF3DE;color:#27500A}
-.tag-beta{background:#FAEEDA;color:#633806}
+.tag-binnenkort{background:#F0EEE9;color:#B0ACA2}
 .card-arrow{width:28px;height:28px;border-radius:6px;background:#F0EEE9;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .card:hover .card-arrow{background:#E8500A}
 .card:hover .card-arrow svg path{stroke:#fff}
 .card-disabled{opacity:.25;pointer-events:none;filter:grayscale(100%)}
-.tag-binnenkort{background:#F0EEE9;color:#B0ACA2}
+.card-directie{border:2px solid #E8500A}
+.card-directie .card-title{color:#E8500A}
+.mavd-widget{background:#fff;border-radius:14px;border:1px solid #E2DFD8;padding:1.25rem 1.4rem;animation:up .3s ease both;animation-delay:200ms}
+.mavd-top{display:flex;align-items:center;gap:12px;margin-bottom:.75rem}
+.mavd-icon{width:40px;height:40px;border-radius:8px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.mavd-title{font-size:14px;font-weight:600;color:#1A2B5F}
+.mavd-sub{font-size:12px;color:#6B6760}
+.mavd-body{background:#F6F4EF;border-radius:10px;padding:.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.mavd-name{font-size:18px;font-weight:600;color:#1A2B5F}
+.mavd-slot{font-size:12px;color:#6B6760;margin-top:2px}
+.mavd-badge{font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px;background:#EAF3DE;color:#27500A;white-space:nowrap}
+.mavd-next{font-size:12px;color:#B0ACA2;margin-top:.6rem}
 .footer{text-align:center;padding:2rem;font-size:12px;color:#B0ACA2}
 .footer b{color:#1A2B5F}
 </style>
@@ -63,374 +69,121 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
   <p>Het centrale platform van MakelaarsVan Amsterdam. Selecteer een module om te starten.</p>
 </div>
 <div class="main">
+
   <div class="section-title">Actieve modules</div>
   <div class="grid">
 
     <a href="https://q-and-a-mva.netlify.app" class="card" style="animation-delay:0ms">
       <div class="card-top">
         <div class="card-icon ic-blue">&#129302;</div>
-        <div class="card-info">
-          <div class="card-title">Q&amp;A Kennisbank</div>
-          <div class="card-desc">Stel vragen over MVA-processen, leveranciers, Ninja Selling en alle modules. Twee lagen: makelaars en directie.</div>
-        </div>
+        <div><div class="card-title">Q&amp;A Kennisbank</div><div class="card-desc">Stel vragen over MVA-processen, leveranciers, Ninja Selling en alle modules. Twee lagen: makelaars en directie.</div></div>
       </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="https://mva-documenten.netlify.app" class="card" style="animation-delay:80ms">
+    <a href="https://mva-documenten.netlify.app" class="card" style="animation-delay:60ms">
       <div class="card-top">
         <div class="card-icon ic-orange">&#128101;</div>
-        <div class="card-info">
-          <div class="card-title">Leveranciers</div>
-          <div class="card-desc">Alle 69 strategische partners en leveranciers. Met contactgegevens, onboarding instructies en contractinformatie.</div>
-        </div>
+        <div><div class="card-title">Leveranciers</div><div class="card-desc">Alle 56 actieve partners en leveranciers. Met contactgegevens, onboarding instructies en contractinformatie.</div></div>
       </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="https://mvaleadpool.netlify.app" class="card" style="animation-delay:160ms">
+    <a href="https://mvaleadpool.netlify.app" class="card" style="animation-delay:120ms">
       <div class="card-top">
         <div class="card-icon ic-green">&#127968;</div>
-        <div class="card-info">
-          <div class="card-title">MVA Leadpool</div>
-          <div class="card-desc">Lead-sharing systeem. Geef leads door na bezichtigingen en bel leads van collega-makelaars op via de pool.</div>
-        </div>
+        <div><div class="card-title">MVA Leadpool</div><div class="card-desc">Lead-sharing systeem. Geef leads door na bezichtigingen en bel leads van collega-makelaars op via de pool.</div></div>
       </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="https://intranet.makelaars-in-amsterdam.nl" target="_blank" class="card" style="animation-delay:180ms">
+      <div class="card-top">
+        <div class="card-icon ic-blue">&#127760;</div>
+        <div><div class="card-title">Intranet MVA</div><div class="card-desc">Leaddistributie schema, telefoonnotitie, postcodes per makelaar en instructies.</div></div>
       </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
   </div>
 
+  <div class="section-title">Live info</div>
+  <div class="mavd-widget">
+    <div class="mavd-top">
+      <div class="mavd-icon">&#128200;</div>
+      <div><div class="mavd-title">Leaddistributie — Nu aan de beurt</div><div class="mavd-sub">Roterend schema, wisselt elke 4 uur</div></div>
+    </div>
+    <div class="mavd-body">
+      <div>
+        <div class="mavd-name" id="mavd-name">Laden...</div>
+        <div class="mavd-slot" id="mavd-slot"></div>
+      </div>
+      <div class="mavd-badge" id="mavd-badge">Nu</div>
+    </div>
+    <div class="mavd-next" id="mavd-next"></div>
+  </div>
 
-    
-    <a href="https://intranet.makelaars-in-amsterdam.nl" target="_blank" class="card" style="animation-delay:240ms">
-      <div class="card-top">
-        <div class="card-icon ic-blue">&#127760;</div>
-        <div class="card-info">
-          <div class="card-title">Intranet MVA</div>
-          <div class="card-desc">Leaddistributie schema, telefoonnotitie, postcodes per makelaar en instructies.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-    <a href="https://q-and-a-mva.netlify.app/admin.html" class="card" style="animation-delay:240ms;border:2px solid #E8500A">
-      <div class="card-top">
-        <div class="card-icon" style="background:#FCEBEB">&#9881;&#65039;</div>
-        <div class="card-info">
-          <div class="card-title" style="color:#E8500A">Gebruikersbeheer</div>
-          <div class="card-desc">Directie: gebruikers toevoegen, activeren en verwijderen. Wachtwoorden beheren voor alle modules.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
+  <div class="section-title" style="margin-top:2rem">&nbsp;</div>
+  <a href="https://q-and-a-mva.netlify.app/admin.html" class="card card-directie" style="animation-delay:240ms">
+    <div class="card-top">
+      <div class="card-icon" style="background:#FCEBEB">&#9881;&#65039;</div>
+      <div><div class="card-title">Gebruikersbeheer</div><div class="card-desc">Directie: gebruikers toevoegen, activeren en verwijderen. Wachtwoorden beheren voor alle modules.</div></div>
+    </div>
+    <div class="card-footer"><span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+  </a>
 
   <div class="section-title">Binnenkort beschikbaar</div>
   <div class="grid">
 
-    <a href="#" class="card card-disabled" style="animation-delay:240ms">
+    <a href="#" class="card card-disabled">
       <div class="card-top">
         <div class="card-icon ic-purple">&#127891;</div>
-        <div class="card-info">
-          <div class="card-title">Opleidingsprogramma</div>
-          <div class="card-desc">Volledig leerpad Fase 1-7, 12 modules, Ninja Selling bibliotheek en werkflows voor aankoop en verkoop.</div>
-        </div>
+        <div><div class="card-title">Opleidingsprogramma</div><div class="card-desc">Volledig leerpad Fase 1-7, 12 modules, Ninja Selling bibliotheek en werkflows voor aankoop en verkoop.</div></div>
       </div>
-      <div class="card-footer">
-        <span class="card-tag tag-binnenkort">Binnenkort</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
+      <div class="card-footer"><span class="card-tag tag-binnenkort">Binnenkort</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="#" class="card card-disabled" style="animation-delay:320ms">
+    <a href="#" class="card card-disabled">
       <div class="card-top">
         <div class="card-icon ic-orange">&#128203;</div>
-        <div class="card-info">
-          <div class="card-title">ACES Profielscan</div>
-          <div class="card-desc">Gedragsprofileringstool voor kandidaten. 28 woordparen, vier dimensies. Resultaten automatisch per e-mail.</div>
-        </div>
+        <div><div class="card-title">ACES Profielscan</div><div class="card-desc">Gedragsprofileringstool voor kandidaten. 28 woordparen, vier dimensies. Resultaten automatisch per e-mail.</div></div>
       </div>
-      <div class="card-footer">
-        <span class="card-tag tag-binnenkort">Binnenkort</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
+      <div class="card-footer"><span class="card-tag tag-binnenkort">Binnenkort</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="#" class="card card-disabled" style="animation-delay:400ms">
+    <a href="#" class="card card-disabled">
       <div class="card-top">
-        <div class="card-icon ic-navy" style="background:#E6F1FB">&#128196;</div>
-        <div class="card-info">
-          <div class="card-title">Documentbibliotheek</div>
-          <div class="card-desc">Contracten, recruitingdocumenten en organisatiestukken via SharePoint. Beschikbaar zodra Azure koppeling actief is.</div>
-        </div>
+        <div class="card-icon ic-blue">&#128196;</div>
+        <div><div class="card-title">Documentbibliotheek</div><div class="card-desc">Contracten, recruitingdocumenten en organisatiestukken via SharePoint. Beschikbaar zodra Azure koppeling actief is.</div></div>
       </div>
-      <div class="card-footer">
-        <span class="card-tag tag-binnenkort">Binnenkort</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
+      <div class="card-footer"><span class="card-tag tag-binnenkort">Binnenkort</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
   </div>
 </div>
-<div class="footer">
-  <b>MvA Intelligence</b> &middot; MakelaarsVan Amsterdam &middot; 2026
-</div>
+<div class="footer"><b>MvA Intelligence</b> &middot; MakelaarsVan Amsterdam &middot; 2026</div>
 
 <script>
 (function(){
-  // Roterend schema - 6 makelaars, slots van 4 uur, start woensdag 15 april 2026 00:00 = Wilma Out
-  var ROTA = [
-    'Wilma Out','Anthonie Schilder','Mathias Elias','Maurits Rodermond',
-    'Rogier de Vries','Jan Jaap ten Arve','Maurits van Leeuwen','Pelle Freijsen','Jori Netiv'
-  ];
-  var SLOT_HRS = 4; // 4 uur per slot
-  var ORIGIN = new Date('2026-04-15T00:00:00'); // ankerpunt: wo 15 apr 00:00 = Wilma Out
-
-  function getSlotIndex(now){
-    var diffMs = now - ORIGIN;
-    var diffSlots = Math.floor(diffMs / (SLOT_HRS * 3600000));
-    return ((diffSlots % ROTA.length) + ROTA.length) % ROTA.length;
-  }
-
-  function fmt(d){
-    var h=d.getHours();
-    var slot=Math.floor(h/SLOT_HRS)*SLOT_HRS;
-    var e=slot+SLOT_HRS;
-    return (slot<10?'0':'')+slot+':00 - '+(e<10?'0':'')+e+':00';
-  }
-
+  var ROTA=['Wilma Out','Anthonie Schilder','Mathias Elias','Maurits Rodermond','Rogier de Vries','Jan Jaap ten Arve','Maurits van Leeuwen','Pelle Freijsen','Jori Netiv'];
+  var ORIGIN=new Date('2026-04-15T00:00:00');
+  function idx(now){var d=Math.floor((now-ORIGIN)/14400000);return((d%ROTA.length)+ROTA.length)%ROTA.length;}
+  function slotStr(now){var h=now.getHours();var s=Math.floor(h/4)*4;var e=s+4;return(s<10?'0':'')+s+':00 - '+(e<10?'0':'')+e+':00';}
   function update(){
     var now=new Date();
-    var idx=getSlotIndex(now);
-    var nextIdx=(idx+1)%ROTA.length;
-    var current=ROTA[idx];
-    var next=ROTA[nextIdx];
-    var slot=fmt(now);
-
-    // Volgende slot tijd
+    var i=idx(now);
+    var ni=(i+1)%ROTA.length;
     var h=now.getHours();
-    var nextSlotH=(Math.floor(h/SLOT_HRS)+1)*SLOT_HRS;
-    var nextTime=(nextSlotH<10?'0':'')+nextSlotH+':00';
-
-    var desc=document.getElementById('mavd-desc');
-    var tag=document.getElementById('mavd-tag');
-    var nxt=document.getElementById('mavd-next');
-    if(!desc)return;
-
-    desc.innerHTML='<b style="color:#1A2B5F;font-size:15px">'+current+'</b><br><span style="font-size:12px;color:#6B6760">Slot: '+slot+'</span>';
-    tag.textContent='Aan de beurt';
-    tag.style.background='#EAF3DE';tag.style.color='#27500A';
-    nxt.textContent='Daarna: '+next+' ('+nextTime+')';
+    var nextH=(Math.floor(h/4)+1)*4;
+    var nextT=(nextH<10?'0':'')+nextH+':00';
+    document.getElementById('mavd-name').textContent=ROTA[i];
+    document.getElementById('mavd-slot').textContent='Slot: '+slotStr(now);
+    document.getElementById('mavd-badge').textContent='Aan de beurt';
+    document.getElementById('mavd-next').textContent='Daarna: '+ROTA[ni]+' vanaf '+nextT;
   }
   update();
   setInterval(update,60000);
 })();
 </script>
-</body>
-</html>
-<html lang="nl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MvA Intelligence</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:#F6F4EF;min-height:100vh}
-header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px rgba(0,0,0,.2)}
-.logo{display:flex;align-items:center;gap:12px}
-.logo-mark{width:38px;height:38px;background:#E8500A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:20px;color:#fff}
-.logo-text{color:#fff}
-.logo-name{font-size:15px;font-weight:600;line-height:1.2}
-.logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase}
-.header-right{font-size:12px;color:rgba(255,255,255,.5)}
-.hero{background:#1A2B5F;padding:2.5rem 2rem 3rem;text-align:center}
-.hero h1{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;font-weight:400;line-height:1.2;margin-bottom:.5rem}
-.hero p{font-size:14px;color:rgba(255,255,255,.6);max-width:480px;margin:0 auto}
-.main{max-width:1100px;margin:-1.5rem auto 0;padding:0 2rem 4rem;position:relative;z-index:1}
-.section-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#B0ACA2;margin-bottom:1rem;margin-top:2.5rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.card{background:#fff;border-radius:14px;border:1px solid #E2DFD8;overflow:hidden;text-decoration:none;display:block;transition:transform .15s,box-shadow .15s;animation:up .3s ease both}
-@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(26,43,95,.12)}
-.card-top{padding:1.4rem 1.4rem 1rem;display:flex;align-items:flex-start;gap:14px}
-.card-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
-.ic-blue{background:#E6F1FB}
-.ic-orange{background:#FAEEDA}
-.ic-green{background:#EAF3DE}
-.ic-purple{background:#EEEDFE}
-.ic-navy{background:#1A2B5F}
-.card-info{}
-.card-title{font-size:16px;font-weight:600;color:#1A2B5F;margin-bottom:4px;line-height:1.2}
-.card-desc{font-size:13px;color:#6B6760;line-height:1.55}
-.card-footer{padding:.8rem 1.4rem;border-top:1px solid #F0EEE9;display:flex;align-items:center;justify-content:space-between}
-.card-tag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px}
-.tag-live{background:#EAF3DE;color:#27500A}
-.tag-beta{background:#FAEEDA;color:#633806}
-.card-arrow{width:28px;height:28px;border-radius:6px;background:#F0EEE9;display:flex;align-items:center;justify-content:center;transition:background .15s}
-.card:hover .card-arrow{background:#E8500A}
-.card:hover .card-arrow svg path{stroke:#fff}
-.card-disabled{opacity:.25;pointer-events:none;filter:grayscale(100%)}
-.tag-binnenkort{background:#F0EEE9;color:#B0ACA2}
-.footer{text-align:center;padding:2rem;font-size:12px;color:#B0ACA2}
-.footer b{color:#1A2B5F}
-</style>
-</head>
-<body>
-<header>
-  <div class="logo">
-    <div class="logo-mark">M</div>
-    <div class="logo-text">
-      <div class="logo-name">MvA Intelligence</div>
-      <div class="logo-sub">MakelaarsVan Amsterdam</div>
-    </div>
-  </div>
-  <div class="header-right">Versie 1.0 &middot; April 2026</div>
-</header>
-<div class="hero">
-  <h1>MvA Intelligence</h1>
-  <p>Het centrale platform van MakelaarsVan Amsterdam. Selecteer een module om te starten.</p>
-</div>
-<div class="main">
-  <div class="section-title">Actieve modules</div>
-  <div class="grid">
-
-    <a href="https://q-and-a-mva.netlify.app" class="card" style="animation-delay:0ms">
-      <div class="card-top">
-        <div class="card-icon ic-blue">&#129302;</div>
-        <div class="card-info">
-          <div class="card-title">Q&amp;A Kennisbank</div>
-          <div class="card-desc">Stel vragen over MVA-processen, leveranciers, Ninja Selling en alle modules. Twee lagen: makelaars en directie.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-    <a href="https://mva-documenten.netlify.app" class="card" style="animation-delay:80ms">
-      <div class="card-top">
-        <div class="card-icon ic-orange">&#128101;</div>
-        <div class="card-info">
-          <div class="card-title">Leveranciers</div>
-          <div class="card-desc">Alle 69 strategische partners en leveranciers. Met contactgegevens, onboarding instructies en contractinformatie.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-    <a href="https://mvaleadpool.netlify.app" class="card" style="animation-delay:160ms">
-      <div class="card-top">
-        <div class="card-icon ic-green">&#127968;</div>
-        <div class="card-info">
-          <div class="card-title">MVA Leadpool</div>
-          <div class="card-desc">Lead-sharing systeem. Geef leads door na bezichtigingen en bel leads van collega-makelaars op via de pool.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-  </div>
-
-
-    <a href="https://intranet.makelaars-in-amsterdam.nl" target="_blank" class="card" style="animation-delay:240ms">
-      <div class="card-top">
-        <div class="card-icon ic-blue">&#127968;</div>
-        <div class="card-info">
-          <div class="card-title">Intranet MVA</div>
-          <div class="card-desc">Leaddistributie schema, telefoonnotitie, postcodes per makelaar en instructies. Opent het MakelaarsVan intranet.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-live">Live</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-    <a href="https://q-and-a-mva.netlify.app/admin.html" class="card" style="animation-delay:240ms;border:2px solid #E8500A">
-      <div class="card-top">
-        <div class="card-icon" style="background:#FCEBEB">&#9881;&#65039;</div>
-        <div class="card-info">
-          <div class="card-title" style="color:#E8500A">Gebruikersbeheer</div>
-          <div class="card-desc">Directie: gebruikers toevoegen, activeren en verwijderen. Wachtwoorden beheren voor alle modules.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-  <div class="section-title">Binnenkort beschikbaar</div>
-  <div class="grid">
-
-    <a href="#" class="card card-disabled" style="animation-delay:240ms">
-      <div class="card-top">
-        <div class="card-icon ic-purple">&#127891;</div>
-        <div class="card-info">
-          <div class="card-title">Opleidingsprogramma</div>
-          <div class="card-desc">Volledig leerpad Fase 1-7, 12 modules, Ninja Selling bibliotheek en werkflows voor aankoop en verkoop.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-binnenkort">Binnenkort</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-    <a href="#" class="card card-disabled" style="animation-delay:320ms">
-      <div class="card-top">
-        <div class="card-icon ic-orange">&#128203;</div>
-        <div class="card-info">
-          <div class="card-title">ACES Profielscan</div>
-          <div class="card-desc">Gedragsprofileringstool voor kandidaten. 28 woordparen, vier dimensies. Resultaten automatisch per e-mail.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-binnenkort">Binnenkort</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-    <a href="#" class="card card-disabled" style="animation-delay:400ms">
-      <div class="card-top">
-        <div class="card-icon ic-navy" style="background:#E6F1FB">&#128196;</div>
-        <div class="card-info">
-          <div class="card-title">Documentbibliotheek</div>
-          <div class="card-desc">Contracten, recruitingdocumenten en organisatiestukken via SharePoint. Beschikbaar zodra Azure koppeling actief is.</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-tag tag-binnenkort">Binnenkort</span>
-        <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      </div>
-    </a>
-
-  </div>
-</div>
-<div class="footer">
-  <b>MvA Intelligence</b> &middot; MakelaarsVan Amsterdam &middot; 2026
-</div>
-
 </body>
 </html>
