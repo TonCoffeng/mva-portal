@@ -108,19 +108,29 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
   </div>
 
   <div class="section-title">Live info</div>
-  <div class="mavd-widget">
-    <div class="mavd-top">
-      <div class="mavd-icon">&#128200;</div>
-      <div><div class="mavd-title">Leaddistributie — Nu aan de beurt</div><div class="mavd-sub">Roterend schema, wisselt elke 4 uur</div></div>
-    </div>
-    <div class="mavd-body">
-      <div>
-        <div class="mavd-name" id="mavd-name">Laden...</div>
-        <div class="mavd-slot" id="mavd-slot"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="mavd-widget">
+      <div class="mavd-top">
+        <div class="mavd-icon">&#128200;</div>
+        <div><div class="mavd-title">Leaddistributie &mdash; Nu aan de beurt</div><div class="mavd-sub">Roterend schema, wisselt elke 4 uur</div></div>
       </div>
-      <div class="mavd-badge" id="mavd-badge">Nu</div>
+      <div class="mavd-body">
+        <div><div class="mavd-name" id="mavd-name">Laden...</div><div class="mavd-slot" id="mavd-slot"></div></div>
+        <div class="mavd-badge" id="mavd-badge">Nu</div>
+      </div>
+      <div class="mavd-next" id="mavd-next"></div>
     </div>
-    <div class="mavd-next" id="mavd-next"></div>
+    <div class="mavd-widget">
+      <div class="mavd-top">
+        <div class="mavd-icon" style="background:#FAEEDA">&#128205;</div>
+        <div><div class="mavd-title">Makelaar van Dienst</div><div class="mavd-sub">09:00&ndash;13:00 en 13:00&ndash;17:00</div></div>
+      </div>
+      <div class="mavd-body">
+        <div><div class="mavd-name" id="mavd2-name">Laden...</div><div class="mavd-slot" id="mavd2-slot"></div></div>
+        <div class="mavd-badge" id="mavd2-badge" style="background:#FAEEDA;color:#633806">Dienst</div>
+      </div>
+      <div class="mavd-next" id="mavd2-next"></div>
+    </div>
   </div>
 
   <div class="section-title" style="margin-top:2rem">&nbsp;</div>
@@ -165,21 +175,57 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 
 <script>
 (function(){
+  // Leaddistributie - roterend 4-uurlijks schema
   var ROTA=['Wilma Out','Anthonie Schilder','Mathias Elias','Maurits Rodermond','Rogier de Vries','Jan Jaap ten Arve','Maurits van Leeuwen','Pelle Freijsen','Jori Netiv'];
   var ORIGIN=new Date('2026-04-15T00:00:00');
-  function idx(now){var d=Math.floor((now-ORIGIN)/14400000);return((d%ROTA.length)+ROTA.length)%ROTA.length;}
+  function ldIdx(now){var d=Math.floor((now-ORIGIN)/14400000);return((d%ROTA.length)+ROTA.length)%ROTA.length;}
   function slotStr(now){var h=now.getHours();var s=Math.floor(h/4)*4;var e=s+4;return(s<10?'0':'')+s+':00 - '+(e<10?'0':'')+e+':00';}
+
+  // Makelaar van Dienst - dagelijks 09-13 / 13-17
+  var MVD={1:['Anthonie Schilder','Mathias Elias'],2:['Pelle Freijsen','Jori Netiv'],3:['Rogier de Vries','Koen Buser'],4:['Maurits van Leeuwen','Jan Jaap ten Arve'],5:['Maurits Rodermond','Wilma Out']};
+  var DAGEN=['zo','ma','di','wo','do','vr','za'];
+
   function update(){
     var now=new Date();
-    var i=idx(now);
-    var ni=(i+1)%ROTA.length;
     var h=now.getHours();
+    var d=now.getDay();
+
+    // Leaddistributie
+    var i=ldIdx(now);
+    var ni=(i+1)%ROTA.length;
     var nextH=(Math.floor(h/4)+1)*4;
     var nextT=(nextH<10?'0':'')+nextH+':00';
     document.getElementById('mavd-name').textContent=ROTA[i];
     document.getElementById('mavd-slot').textContent='Slot: '+slotStr(now);
     document.getElementById('mavd-badge').textContent='Aan de beurt';
     document.getElementById('mavd-next').textContent='Daarna: '+ROTA[ni]+' vanaf '+nextT;
+
+    // Makelaar van Dienst
+    var n2=document.getElementById('mavd2-name');
+    var s2=document.getElementById('mavd2-slot');
+    var b2=document.getElementById('mavd2-badge');
+    var nx2=document.getElementById('mavd2-next');
+    if(!n2)return;
+    if(d>=1&&d<=5){
+      var pair=MVD[d];
+      var isOchtend=h<13;
+      var inDienst=h>=9&&h<17;
+      var current=isOchtend?pair[0]:pair[1];
+      var slot=isOchtend?'09:00 - 13:00':'13:00 - 17:00';
+      n2.textContent=current;
+      s2.textContent=inDienst?'Dienst: '+slot:'Buiten diensttijden';
+      b2.textContent=inDienst?'In dienst':'Vandaag';
+      b2.style.background=inDienst?'#EAF3DE':'#F0EEE9';
+      b2.style.color=inDienst?'#27500A':'#B0ACA2';
+      var nextName=isOchtend?pair[1]:(d<5?MVD[d+1][0]:MVD[1][0]);
+      var nextDay=isOchtend?'':(d<5?DAGEN[d+1]+' ':'ma ');
+      nx2.textContent='Daarna: '+nextName+' ('+nextDay+(isOchtend?'13:00':'09:00')+')';
+    } else {
+      n2.textContent='Weekend';
+      s2.textContent='Geen dienst';
+      b2.textContent='Weekend';b2.style.background='#F0EEE9';b2.style.color='#B0ACA2';
+      nx2.textContent='Maandag: '+MVD[1][0]+' (09:00)';
+    }
   }
   update();
   setInterval(update,60000);
