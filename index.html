@@ -90,7 +90,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
   <div class="section-title">Actieve modules</div>
   <div class="grid">
 
-    <a href="https://q-and-a-mva.netlify.app" class="card" style="animation-delay:0ms" onclick="return openWithSSO(event,'https://q-and-a-mva.netlify.app')">
+    <a href="https://q-and-a-mva.netlify.app" class="card" style="animation-delay:0ms">
       <div class="card-top">
         <div class="card-icon ic-blue">&#129302;</div>
         <div><div class="card-title">Q&amp;A Kennisbank</div><div class="card-desc">Stel vragen over MVA-processen, leveranciers, Ninja Selling en alle modules. Twee lagen: makelaars en directie.</div></div>
@@ -250,15 +250,6 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 </script>
 
 <script>
-function openWithSSO(e, url) {
-  var s = sessionStorage.getItem('mva_portal_user');
-  if(!s) return true; // niet ingelogd - gewone link
-  e.preventDefault();
-  var u = JSON.parse(s);
-  var token = btoa(u.email + ':' + u.level + ':' + Date.now());
-  window.location.href = url + '?sso=' + encodeURIComponent(token);
-  return false;
-}
 var PORTAL_USERS = {
   'toncoffeng@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Ton Coffeng'},
   'hanskoppes@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Hans Koppes'},
