@@ -252,13 +252,12 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 <script>
 function openWithSSO(e, url) {
   var s = sessionStorage.getItem('mva_portal_user');
-  if(s) {
-    e.preventDefault();
-    var u = JSON.parse(s);
-    var token = btoa(u.email + ':' + u.level + ':' + Date.now());
-    window.open(url + '?sso=' + encodeURIComponent(token), '_blank');
-  }
-  return true;
+  if(!s) return true; // niet ingelogd - gewone link
+  e.preventDefault();
+  var u = JSON.parse(s);
+  var token = btoa(u.email + ':' + u.level + ':' + Date.now());
+  window.location.href = url + '?sso=' + encodeURIComponent(token);
+  return false;
 }
 var PORTAL_USERS = {
   'toncoffeng@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Ton Coffeng'},
