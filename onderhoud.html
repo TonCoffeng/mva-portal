@@ -122,22 +122,26 @@ window.addEventListener("load", function() {
   if (saved) { try { onLoginSuccess(JSON.parse(saved)); } catch(e) {} }
 });
 function doLogin() {
-  var email = document.getElementById("email").value.trim();
+  var email = document.getElementById("email").value.trim().toLowerCase();
   var pw = document.getElementById("pw").value;
   var errEl = document.getElementById("loginErr");
   errEl.textContent = "";
   if (!email || !pw) { errEl.textContent = "Vul e-mail en wachtwoord in"; return; }
-  fetch(Q_AUTH_URL, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({action: "login", email: email, password: pw}) })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (!d.success) { errEl.textContent = "Ongeldige inloggegevens"; return; }
-      var lvl = (d.level || "").toLowerCase();
-      if (lvl !== "directie" && lvl !== "level2") { errEl.textContent = "Alleen directie heeft toegang"; return; }
-      var user = { name: d.name, email: email, level: lvl };
-      localStorage.setItem("mva_onderhoud_user", JSON.stringify(user));
-      onLoginSuccess(user);
-    })
-    .catch(function(e) { errEl.textContent = "Verbindingsfout: " + e.message; });
+  // Direct tegen Supabase: zoek gebruiker op email
+  DB.from("gebruikers").select("naam,email,level,actief").eq("email", email).limit(1).then(function(res) {
+    if (res.error) { errEl.textContent = "Verbindingsfout: " + res.error.message; return; }
+    if (!res.data || res.data.length === 0) { errEl.textContent = "Ongeldige inloggegevens"; return; }
+    var u = res.data[0];
+    if (!u.actief) { errEl.textContent = "Account is niet actief"; return; }
+    var lvl = (u.level || "").toLowerCase();
+    if (lvl !== "directie" && lvl !== "level2") { errEl.textContent = "Alleen directie heeft toegang"; return; }
+    // Wachtwoord check (zelfde logica als q-and-a admin)
+    var expectedPw = (lvl === "directie" || lvl === "level2") ? "Level2!" : "MVA2026!";
+    if (pw !== expectedPw) { errEl.textContent = "Ongeldige inloggegevens"; return; }
+    var user = { name: u.naam, email: email, level: lvl };
+    localStorage.setItem("mva_onderhoud_user", JSON.stringify(user));
+    onLoginSuccess(user);
+  });
 }
 function doLogout() { localStorage.removeItem("mva_onderhoud_user"); location.reload(); }
 function onLoginSuccess(user) {
