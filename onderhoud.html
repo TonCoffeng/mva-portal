@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MvA Onderhoud</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Roboto,sans-serif;background:#f5f5f4;color:#1a2b5f;min-height:100vh}
+.hdr{background:#1a2b5f;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+.hdr h1{font-size:18px;font-weight:900}
+.hdr h1 span{color:#e8500a}
+.hdr nav{display:flex;gap:8px;align-items:center}
+.hdr a, .hdr button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;text-decoration:none;font-family:inherit}
+.hdr a:hover, .hdr button:hover{background:rgba(255,255,255,.1)}
+.hdr .user{font-size:13px;opacity:.85;margin-right:8px}
+.login-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{background:#fff;border-radius:12px;padding:32px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-card h2{font-size:20px;margin-bottom:20px;font-weight:700}
+.login-card label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;color:#6b6760}
+.login-card input{width:100%;padding:10px 12px;border:1px solid #d6d3d1;border-radius:6px;font-size:14px;font-family:inherit;margin-bottom:16px}
+.login-card input:focus{outline:none;border-color:#1a2b5f}
+.login-card button{width:100%;background:#e8500a;color:#fff;border:none;padding:12px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.login-card button:hover{background:#c2410c}
+.login-card .err{color:#dc2626;font-size:13px;margin-top:8px;min-height:18px}
+.layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 60px)}
+.sidebar{background:#fff;border-right:1px solid #e7e5e4;padding:20px 0}
+.sidebar h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b6760;padding:0 20px;margin-bottom:12px}
+.app-item{padding:12px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.app-item:hover{background:#f5f5f4}
+.app-item.active{background:#fef3ec;border-left-color:#e8500a}
+.app-item .name{font-weight:700;font-size:14px;color:#1a2b5f}
+.app-item .slug{font-size:11px;color:#6b6760;margin-top:2px;font-family:monospace}
+.main{padding:24px 32px;overflow-y:auto;max-height:calc(100vh - 60px)}
+.empty{color:#6b6760;font-size:14px;padding:40px;text-align:center}
+.app-detail h2{font-size:24px;font-weight:900;margin-bottom:4px}
+.app-detail .desc{color:#6b6760;font-size:14px;margin-bottom:20px;max-width:720px}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.links a{background:#1a2b5f;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;text-decoration:none;font-weight:500}
+.links a:hover{background:#0f1a3d}
+.links a.gh{background:#24292f}
+.section{background:#fff;border:1px solid #e7e5e4;border-radius:8px;padding:18px 20px;margin-bottom:16px}
+.section h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1a2b5f;margin-bottom:12px}
+.list-item{padding:10px 0;border-bottom:1px solid #f0eeed;font-size:13px}
+.list-item:last-child{border-bottom:none}
+.list-item strong{color:#1a2b5f;font-weight:700}
+.list-item .meta{color:#6b6760;font-size:12px;margin-top:2px}
+.list-item code{background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:12px}
+.changelog-item{padding:12px 0;border-bottom:1px solid #f0eeed}
+.changelog-item:last-child{border-bottom:none}
+.changelog-item .when{font-size:11px;color:#6b6760;margin-bottom:4px;font-family:monospace}
+.changelog-item .what{font-size:13px;color:#1a2b5f;line-height:1.4}
+.changelog-item .sha{font-family:monospace;font-size:11px;color:#e8500a;margin-top:4px}
+.prompt-box{margin-top:8px}
+.prompt-box textarea{width:100%;min-height:80px;padding:10px 12px;border:1px solid #d6d3d1;border-radius:6px;font-family:inherit;font-size:14px;resize:vertical}
+.prompt-box textarea:focus{outline:none;border-color:#1a2b5f}
+.btn-row{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.btn{padding:10px 16px;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-primary{background:#e8500a;color:#fff}
+.btn-primary:hover{background:#c2410c}
+.btn-secondary{background:#1a2b5f;color:#fff}
+.btn-secondary:hover{background:#0f1a3d}
+.prompt-output{margin-top:12px;background:#1a2b5f;color:#fff;padding:16px;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.5;white-space:pre-wrap;max-height:400px;overflow-y:auto;display:none}
+.prompt-output.show{display:block}
+.copied{display:inline-block;color:#22c55e;font-size:12px;font-weight:700;opacity:0;transition:opacity .2s}
+.copied.show{opacity:1}
+.add-log{background:#fef3ec;border:1px solid #fbd9bd}
+.add-log input, .add-log textarea{width:100%;padding:8px 10px;border:1px solid #d6d3d1;border-radius:6px;font-size:13px;font-family:inherit;margin-bottom:8px}
+.add-log textarea{resize:vertical;min-height:60px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a2b5f;color:#fff;padding:14px 20px;border-radius:8px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.2);opacity:0;transform:translateY(20px);transition:all .25s;z-index:1000}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:#dc2626}
+@media(max-width:780px){.layout{grid-template-columns:1fr}.sidebar{border-right:none;border-bottom:1px solid #e7e5e4;max-height:200px;overflow-y:auto}}
+</style>
+</head>
+<body>
+<header class="hdr">
+<h1>MvA <span>Onderhoud</span></h1>
+<nav>
+<span class="user" id="userName" style="display:none"></span>
+<a href="https://mva-intelligence.netlify.app/dashboard.html">Dashboard</a>
+<a href="https://q-and-a-mva.netlify.app">Q&amp;A</a>
+<button id="logoutBtn" style="display:none">Uitloggen</button>
+</nav>
+</header>
+<div id="loginWrap" class="login-wrap">
+<div class="login-card">
+<h2>Inloggen — Directie</h2>
+<label>E-mailadres</label>
+<input type="email" id="email" placeholder="naam@makelaarsvan.nl">
+<label>Wachtwoord</label>
+<input type="password" id="pw" placeholder="Level2!">
+<button id="loginBtn">Inloggen</button>
+<div class="err" id="loginErr"></div>
+</div>
+</div>
+<div id="appWrap" style="display:none">
+<div class="layout">
+<aside class="sidebar">
+<h3>Applicaties</h3>
+<div id="appList"></div>
+</aside>
+<main class="main">
+<div id="appDetail" class="empty">Selecteer een applicatie links om te beginnen.</div>
+</main>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SUPABASE_URL = "https://ehqtyhoeubchcwfavdzr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_OqTL874jsDEMKg9LomfrmQ_nwIo6Wet";
+const Q_AUTH_URL = "https://q-and-a-mva.netlify.app/.netlify/functions/auth";
+let DB, currentUser = null, apps = [], selectedSlug = null;
+window.addEventListener("load", function() {
+  DB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  document.getElementById("loginBtn").addEventListener("click", doLogin);
+  document.getElementById("logoutBtn").addEventListener("click", doLogout);
+  document.getElementById("pw").addEventListener("keydown", function(e) { if(e.key === "Enter") doLogin(); });
+  var saved = localStorage.getItem("mva_onderhoud_user");
+  if (saved) { try { onLoginSuccess(JSON.parse(saved)); } catch(e) {} }
+});
+function doLogin() {
+  var email = document.getElementById("email").value.trim();
+  var pw = document.getElementById("pw").value;
+  var errEl = document.getElementById("loginErr");
+  errEl.textContent = "";
+  if (!email || !pw) { errEl.textContent = "Vul e-mail en wachtwoord in"; return; }
+  fetch(Q_AUTH_URL, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({action: "login", email: email, password: pw}) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) { errEl.textContent = "Ongeldige inloggegevens"; return; }
+      var lvl = (d.level || "").toLowerCase();
+      if (lvl !== "directie" && lvl !== "level2") { errEl.textContent = "Alleen directie heeft toegang"; return; }
+      var user = { name: d.name, email: email, level: lvl };
+      localStorage.setItem("mva_onderhoud_user", JSON.stringify(user));
+      onLoginSuccess(user);
+    })
+    .catch(function(e) { errEl.textContent = "Verbindingsfout: " + e.message; });
+}
+function doLogout() { localStorage.removeItem("mva_onderhoud_user"); location.reload(); }
+function onLoginSuccess(user) {
+  currentUser = user;
+  document.getElementById("loginWrap").style.display = "none";
+  document.getElementById("appWrap").style.display = "block";
+  document.getElementById("userName").textContent = user.name;
+  document.getElementById("userName").style.display = "inline";
+  document.getElementById("logoutBtn").style.display = "inline-block";
+  loadApps();
+}
+function loadApps() {
+  DB.from("apps").select("*").order("prioriteit").then(function(res) {
+    if (res.error) { toast("Fout: " + res.error.message, true); return; }
+    apps = res.data || [];
+    renderAppList();
+    if (apps.length > 0) selectApp(apps[0].slug);
+  });
+}
+function renderAppList() {
+  var html = apps.map(function(a) {
+    return "<div class=\"app-item" + (a.slug === selectedSlug ? " active" : "") + "\" onclick=\"selectApp('" + esc(a.slug) + "')\">" +
+      "<div class=\"name\">" + esc(a.naam) + "</div>" +
+      "<div class=\"slug\">" + esc(a.slug) + "</div></div>";
+  }).join("");
+  document.getElementById("appList").innerHTML = html;
+}
+function selectApp(slug) {
+  selectedSlug = slug;
+  renderAppList();
+  var app = apps.find(function(a) { return a.slug === slug; });
+  if (!app) return;
+  var detail = document.getElementById("appDetail");
+  detail.classList.remove("empty");
+  detail.innerHTML = renderAppDetail(app);
+  loadChangelog(slug);
+}
+function renderListSection(items, renderFn, emptyText) {
+  if (!items || items.length === 0) return "<div class=\"meta\">" + emptyText + "</div>";
+  return items.map(renderFn).join("");
+}
+function renderAppDetail(app) {
+  var sys = renderListSection(app.externe_systemen, function(s) {
+    var meta = "";
+    if (s.doel) meta += "<div class=\"meta\">" + esc(s.doel) + "</div>";
+    if (s.id) meta += "<div class=\"meta\">ID: <code>" + esc(s.id) + "</code></div>";
+    if (s.beheer) meta += "<div class=\"meta\">Beheer: " + esc(s.beheer) + "</div>";
+    if (s.status) meta += "<div class=\"meta\">Status: " + esc(s.status) + "</div>";
+    if (s.endpoint) meta += "<div class=\"meta\">Endpoint: <code>" + esc(s.endpoint) + "</code></div>";
+    return "<div class=\"list-item\"><strong>" + esc(s.naam) + "</strong>" + meta + "</div>";
+  }, "Geen externe systemen geregistreerd");
+  var cfg = renderListSection(app.config_secties, function(s) {
+    var meta = "";
+    if (s.zoekterm) meta += "<div class=\"meta\">Zoek: <code>" + esc(s.zoekterm) + "</code></div>";
+    if (s.bestand) meta += "<div class=\"meta\">Bestand: <code>" + esc(s.bestand) + "</code></div>";
+    if (s.type) meta += "<div class=\"meta\">Type: " + esc(s.type) + "</div>";
+    return "<div class=\"list-item\"><strong>" + esc(s.sectie) + "</strong>" + meta + "</div>";
+  }, "Geen secties geregistreerd");
+  var env = renderListSection(app.env_vars, function(e) {
+    var meta = "";
+    if (e.waar) meta += "<div class=\"meta\">Locatie: " + esc(e.waar) + "</div>";
+    if (e.status) meta += "<div class=\"meta\">Status: " + esc(e.status) + "</div>";
+    return "<div class=\"list-item\"><strong><code>" + esc(e.naam) + "</code></strong>" + meta + "</div>";
+  }, "Geen env vars geregistreerd");
+  var liveLink = app.live_url ? "<a href=\"" + esc(app.live_url) + "\" target=\"_blank\">🌐 Live site</a>" : "";
+  var ghLink = app.github_repo ? "<a href=\"" + esc(app.github_repo) + "\" target=\"_blank\" class=\"gh\">⚙️ GitHub</a>" : "";
+  var nlLink = app.netlify_site ? "<a href=\"https://app.netlify.com/sites/" + esc(app.netlify_site) + "/overview\" target=\"_blank\">▲ Netlify</a>" : "";
+  return "<div class=\"app-detail\">" +
+    "<h2>" + esc(app.naam) + "</h2>" +
+    "<div class=\"desc\">" + esc(app.beschrijving || "") + "</div>" +
+    "<div class=\"links\">" + liveLink + ghLink + nlLink + "</div>" +
+    "<div class=\"section\"><h3>📝 Wijziging starten</h3><div class=\"prompt-box\">" +
+      "<textarea id=\"wijzigingInput\" placeholder=\"Beschrijf wat je wilt wijzigen, bijv: Voeg Hypotheekshop toe als bron-knop\"></textarea>" +
+      "<div class=\"btn-row\">" +
+        "<button class=\"btn btn-primary\" onclick=\"genereerPrompt()\">Genereer Claude prompt</button>" +
+        "<button class=\"btn btn-secondary\" onclick=\"window.open('https://claude.ai/new','_blank')\">Open nieuwe Claude chat</button>" +
+        "<span class=\"copied\" id=\"copiedMsg\">✓ Gekopieerd</span>" +
+      "</div>" +
+      "<div class=\"prompt-output\" id=\"promptOutput\"></div>" +
+    "</div></div>" +
+    "<div class=\"section\"><h3>📜 Changelog</h3><div id=\"changelogList\"><div class=\"meta\">Laden...</div></div></div>" +
+    "<div class=\"section add-log\"><h3>➕ Wijziging toevoegen aan changelog</h3>" +
+      "<input type=\"text\" id=\"logWijziging\" placeholder=\"Korte beschrijving van de wijziging\">" +
+      "<input type=\"text\" id=\"logCommit\" placeholder=\"Commit SHA (12 tekens, optioneel)\" maxlength=\"12\">" +
+      "<textarea id=\"logNotities\" placeholder=\"Notities (optioneel)\"></textarea>" +
+      "<button class=\"btn btn-primary\" onclick=\"addChangelogEntry()\">Toevoegen</button>" +
+    "</div>" +
+    "<div class=\"section\"><h3>🔌 Externe systemen</h3>" + sys + "</div>" +
+    "<div class=\"section\"><h3>⚙️ Configuratie-secties in code</h3>" + cfg + "</div>" +
+    "<div class=\"section\"><h3>🔐 Environment variables</h3>" + env + "</div>" +
+  "</div>";
+}
+function loadChangelog(slug) {
+  DB.from("app_changelog").select("*").eq("app_slug", slug).order("datum", {ascending: false}).limit(10).then(function(res) {
+    if (res.error) { document.getElementById("changelogList").innerHTML = "<div class=\"meta\">Fout: " + esc(res.error.message) + "</div>"; return; }
+    var items = (res.data || []).map(function(c) {
+      var d = new Date(c.datum);
+      var when = d.toLocaleDateString("nl-NL", {day:"2-digit", month:"short", year:"numeric"}) + " " + d.toLocaleTimeString("nl-NL", {hour:"2-digit", minute:"2-digit"});
+      var byline = c.uitgevoerd_door ? " • " + esc(c.uitgevoerd_door) : "";
+      var sha = c.commit_sha ? "<div class=\"sha\">commit: " + esc(c.commit_sha) + "</div>" : "";
+      var notes = c.notities ? "<div class=\"meta\">" + esc(c.notities) + "</div>" : "";
+      return "<div class=\"changelog-item\"><div class=\"when\">" + when + byline + "</div><div class=\"what\">" + esc(c.wijziging) + "</div>" + sha + notes + "</div>";
+    }).join("") || "<div class=\"meta\">Nog geen changelog entries</div>";
+    document.getElementById("changelogList").innerHTML = items;
+  });
+}
+function addChangelogEntry() {
+  var wijziging = document.getElementById("logWijziging").value.trim();
+  var commit = document.getElementById("logCommit").value.trim();
+  var notities = document.getElementById("logNotities").value.trim();
+  if (!wijziging) { toast("Vul een wijziging in", true); return; }
+  var entry = { app_slug: selectedSlug, wijziging: wijziging, uitgevoerd_door: currentUser.name };
+  if (commit) entry.commit_sha = commit;
+  if (notities) entry.notities = notities;
+  DB.from("app_changelog").insert([entry]).then(function(res) {
+    if (res.error) { toast("Fout: " + res.error.message, true); return; }
+    toast("Toegevoegd aan changelog");
+    document.getElementById("logWijziging").value = "";
+    document.getElementById("logCommit").value = "";
+    document.getElementById("logNotities").value = "";
+    loadChangelog(selectedSlug);
+  });
+}
+function genereerPrompt() {
+  var app = apps.find(function(a) { return a.slug === selectedSlug; });
+  if (!app) return;
+  var wijziging = document.getElementById("wijzigingInput").value.trim() || "[beschrijf hier de wijziging]";
+  DB.from("app_changelog").select("*").eq("app_slug", selectedSlug).order("datum", {ascending: false}).limit(5).then(function(logRes) {
+    var recentLog = (logRes.data || []).map(function(c) {
+      return "- " + new Date(c.datum).toLocaleDateString("nl-NL") + ": " + c.wijziging + (c.commit_sha ? " (" + c.commit_sha + ")" : "");
+    }).join("\n") || "(nog geen changelog)";
+    var sys = (app.externe_systemen || []).map(function(s) {
+      return "- " + s.naam + (s.doel ? ": " + s.doel : "") + (s.id ? " (id: " + s.id + ")" : "") + (s.beheer ? " (beheer: " + s.beheer + ")" : "");
+    }).join("\n");
+    var cfg = (app.config_secties || []).map(function(s) {
+      return "- " + s.sectie + (s.zoekterm ? " — zoek \"" + s.zoekterm + "\"" : "") + (s.bestand ? " in " + s.bestand : "");
+    }).join("\n");
+    var env = (app.env_vars || []).map(function(e) {
+      return "- " + e.naam + (e.waar ? " (" + e.waar + ")" : "") + (e.status ? " — " + e.status : "");
+    }).join("\n");
+    var prompt = "Onderhoud " + app.naam + " (slug: " + app.slug + ")\nWijziging: " + wijziging +
+      "\n\n=== APP CONTEXT ===\n" + (app.beschrijving || "") +
+      "\n\nLive: " + (app.live_url || "") +
+      "\nGitHub: " + (app.github_repo || "") +
+      "\nNetlify site: " + (app.netlify_site || "") +
+      "\n\n=== EXTERNE SYSTEMEN ===\n" + sys +
+      "\n\n=== CONFIGURATIE-SECTIES IN CODE ===\n" + cfg +
+      "\n\n=== ENVIRONMENT VARIABLES ===\n" + env +
+      "\n\n=== RECENTE CHANGELOG (laatste 5) ===\n" + recentLog +
+      "\n\n=== INSTRUCTIES ===\n" +
+      "1. Voer de wijziging door via GitHub API (vraag mij om een classic token, repo scope, 7 dagen).\n" +
+      "2. Gebruik Claude in Chrome om in de browser te werken.\n" +
+      "3. Na afronding: voeg een changelog entry toe via mva-intelligence.netlify.app/onderhoud.html (commit SHA + korte beschrijving).";
+    var out = document.getElementById("promptOutput");
+    out.textContent = prompt;
+    out.classList.add("show");
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(prompt).then(function() { showCopied(); }).catch(function() {});
+    }
+  });
+}
+function showCopied() {
+  var el = document.getElementById("copiedMsg");
+  el.classList.add("show");
+  setTimeout(function() { el.classList.remove("show"); }, 2000);
+}
+function toast(msg, isError) {
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " error" : "");
+  setTimeout(function() { t.classList.remove("show"); }, 3000);
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"\047]/g, function(c) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\047":"&#39;"}[c];
+  });
+}
+</script>
+</body>
+</html>
