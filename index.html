@@ -53,6 +53,14 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 .footer b{color:#1A2B5F}
 .rg-hide{display:none!important}
 </style>
+<meta name="theme-color" content="#1A2B5F">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MvA Intelligence">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 </head>
 <body>
 <div id="portalLogin" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1A2B5F;position:fixed;inset:0;z-index:999">
@@ -484,5 +492,12 @@ if(window.MVA_SSO){
 }
 </script>
 
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(e){ console.warn('SW registratie mislukt:', e); });
+  });
+}
+</script>
 </body>
 </html>
