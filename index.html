@@ -254,8 +254,34 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
   function ldIdx(now){var d=Math.floor((now-ORIGIN)/14400000);return((d%ROTA.length)+ROTA.length)%ROTA.length;}
   function slotStr(now){var h=now.getHours();var s=Math.floor(h/4)*4;var e=s+4;return(s<10?'0':'')+s+':00 - '+(e<10?'0':'')+e+':00';}
 
-  // Makelaar van Dienst - dagelijks 09-13 / 13-17
-  var MVD={1:['Anthonie Schilder','Mathias Elias'],2:['Pelle Freijsen','Jori Netiv'],3:['Rogier de Vries','Koen Buser'],4:['Maurits van Leeuwen','Jan Jaap ten Arve'],5:['Maurits Rodermond','Wilma Out']};
+  // Makelaar van Dienst - rooster v2 (11 mei - 31 dec 2026)
+  var FEEST={'2026-05-14':'Hemelvaartsdag','2026-05-25':'Tweede Pinksterdag','2026-12-25':'Eerste Kerstdag'};
+  var MA_PM={
+    '2026-05-11':'Mathias Elias','2026-05-18':'Mathias Elias',
+    '2026-06-01':'Maurits van Leeuwen','2026-06-08':'Maurits Rodermond','2026-06-15':'Wilma Out','2026-06-22':'Rogier de Vries','2026-06-29':'Pelle Freijsen',
+    '2026-07-06':'Jan Jaap ten Arve','2026-07-13':'Anthonie Schilder','2026-07-20':'Jori Netiv','2026-07-27':'Mathias Elias',
+    '2026-08-03':'Maurits van Leeuwen','2026-08-10':'Maurits Rodermond','2026-08-17':'Wilma Out','2026-08-24':'Rogier de Vries','2026-08-31':'Pelle Freijsen',
+    '2026-09-07':'Jan Jaap ten Arve','2026-09-14':'Anthonie Schilder','2026-09-21':'Jori Netiv','2026-09-28':'Anthonie Schilder',
+    '2026-10-05':'Maurits van Leeuwen','2026-10-12':'Maurits Rodermond','2026-10-19':'Wilma Out','2026-10-26':'Rogier de Vries',
+    '2026-11-02':'Pelle Freijsen','2026-11-09':'Jan Jaap ten Arve','2026-11-16':'Pelle Freijsen','2026-11-23':'Jori Netiv','2026-11-30':'Jori Netiv',
+    '2026-12-07':'Maurits van Leeuwen','2026-12-14':'Maurits Rodermond','2026-12-21':'Wilma Out','2026-12-28':'Jan Jaap ten Arve'
+  };
+  function ymd(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
+  function dienstVoor(dt){
+    var k=ymd(dt),wd=dt.getDay();
+    if(FEEST[k])return null;
+    if(wd===1)return {o:'Anthonie Schilder',m:MA_PM[k]||null};
+    if(wd===2)return {o:'Pelle Freijsen',m:'Rogier de Vries'};
+    if(wd===3)return {o:'Jori Netiv',m:'Mathias Elias'};
+    if(wd===4)return {o:'Maurits van Leeuwen',m:'Jan Jaap ten Arve'};
+    if(wd===5)return {o:'Maurits Rodermond',m:'Wilma Out'};
+    return null;
+  }
+  function volgendeDienst(from){
+    var d=new Date(from);
+    for(var i=0;i<10;i++){d.setDate(d.getDate()+1);var dv=dienstVoor(d);if(dv)return {d:new Date(d),dv:dv};}
+    return null;
+  }
   var DAGEN=['zo','ma','di','wo','do','vr','za'];
 
   function update(){
@@ -279,25 +305,31 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
     var b2=document.getElementById('mavd2-badge');
     var nx2=document.getElementById('mavd2-next');
     if(!n2)return;
-    if(d>=1&&d<=5){
-      var pair=MVD[d];
+    var feest=FEEST[ymd(now)];
+    var vandaag=dienstVoor(now);
+    if(vandaag){
       var isOchtend=h<13;
       var inDienst=h>=9&&h<17;
-      var current=isOchtend?pair[0]:pair[1];
+      var current=isOchtend?vandaag.o:vandaag.m;
       var slot=isOchtend?'09:00 - 13:00':'13:00 - 17:00';
-      n2.textContent=current;
+      n2.textContent=current||'Nog niet ingepland';
       s2.textContent=inDienst?'Dienst: '+slot:'Buiten diensttijden';
       b2.textContent=inDienst?'In dienst':'Vandaag';
       b2.style.background=inDienst?'#EAF3DE':'#F0EEE9';
       b2.style.color=inDienst?'#27500A':'#B0ACA2';
-      var nextName=isOchtend?pair[1]:(d<5?MVD[d+1][0]:MVD[1][0]);
-      var nextDay=isOchtend?'':(d<5?DAGEN[d+1]+' ':'ma ');
-      nx2.textContent='Daarna: '+nextName+' ('+nextDay+(isOchtend?'13:00':'09:00')+')';
+      if(isOchtend&&vandaag.m){
+        nx2.textContent='Daarna: '+vandaag.m+' (13:00)';
+      } else {
+        var v=volgendeDienst(now);
+        nx2.textContent=v?('Daarna: '+v.dv.o+' ('+DAGEN[v.d.getDay()]+' 09:00)'):'';
+      }
     } else {
-      n2.textContent='Weekend';
+      n2.textContent=feest?feest:'Weekend';
       s2.textContent='Geen dienst';
-      b2.textContent='Weekend';b2.style.background='#F0EEE9';b2.style.color='#B0ACA2';
-      nx2.textContent='Maandag: '+MVD[1][0]+' (09:00)';
+      b2.textContent=feest?'Vrij':'Weekend';
+      b2.style.background='#F0EEE9';b2.style.color='#B0ACA2';
+      var v2=volgendeDienst(now);
+      nx2.textContent=v2?('Volgende: '+v2.dv.o+' ('+DAGEN[v2.d.getDay()]+' 09:00)'):'';
     }
   }
   update();
