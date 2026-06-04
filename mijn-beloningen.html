@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mijn beloningen · MvA Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F6F4EF;min-height:100vh;color:#1A2B5F}
+header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:38px;height:38px;background:#E8500A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:20px;color:#fff}
+.logo-name{font-size:15px;font-weight:600;color:#fff;line-height:1.2}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase}
+.back{font-size:13px;color:rgba(255,255,255,.7);text-decoration:none;border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:6px}
+.back:hover{color:#fff}
+.hero{background:#1A2B5F;padding:2rem 2rem 3rem;text-align:center}
+.hero h1{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;font-weight:400;margin-bottom:.4rem}
+.hero p{font-size:14px;color:rgba(255,255,255,.6)}
+.main{max-width:880px;margin:-1.5rem auto 0;padding:0 2rem 4rem;position:relative;z-index:1}
+.totaal{background:#fff;border-radius:14px;border:1px solid #E2DFD8;padding:1.4rem 1.6rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.totaal-label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#B0ACA2}
+.totaal-bedrag{font-family:'DM Serif Display',serif;font-size:34px;color:#1A2B5F}
+.totaal-sub{font-size:12px;color:#6B6760;margin-top:2px}
+.lijst{display:flex;flex-direction:column;gap:12px}
+.rij{background:#fff;border-radius:12px;border:1px solid #E2DFD8;padding:1.1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.rij-adres{font-size:15px;font-weight:600;color:#1A2B5F}
+.rij-meta{font-size:12px;color:#6B6760;margin-top:3px}
+.rij-rechts{text-align:right;flex-shrink:0}
+.rij-bedrag{font-size:17px;font-weight:600;color:#1A2B5F}
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px;margin-top:5px}
+.tag-concept{background:#FAEEDA;color:#633806}
+.tag-uitbetaald{background:#EAF3DE;color:#27500A}
+.leeg{background:#fff;border-radius:12px;border:1px dashed #E2DFD8;padding:2.5rem;text-align:center;color:#6B6760;font-size:14px}
+.melding{max-width:420px;margin:5rem auto;background:#fff;border-radius:12px;border:1px solid #E2DFD8;padding:2rem;text-align:center}
+.melding a{color:#E8500A;font-weight:600;text-decoration:none}
+.footer{text-align:center;padding:2rem;font-size:12px;color:#B0ACA2}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    <div><div class="logo-name">Mijn beloningen</div><div class="logo-sub">Makelaars Van Amsterdam</div></div>
+  </div>
+  <a class="back" href="/">&larr; Naar portal</a>
+</header>
+<div class="hero">
+  <h1>Mijn beloningen</h1>
+  <p id="heroSub">Je vergoedingen voor doorgegeven leads en hypotheekverwijzingen.</p>
+</div>
+<div class="main" id="main">
+  <div class="leeg">Laden&hellip;</div>
+</div>
+<div class="footer"><b>MvA Intelligence</b> &middot; Makelaars Van Amsterdam &middot; 2026</div>
+
+<script type="module">
+const SB_URL='https://olfcrzusdkijxroxvsgm.supabase.co';
+const SB_KEY='sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
+const euro=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',minimumFractionDigits:0});
+const main=document.getElementById('main');
+function melding(html){ main.innerHTML='<div class="melding">'+html+'</div>'; }
+const TYPE_LABEL={'lead_175':'Doorgegeven lead','hypotheek_650':'Hypotheekverwijzing'};
+const STATUS_LABEL={'concept':'Nog niet uitbetaald','uitbetaald':'Uitbetaald'};
+
+try{
+  const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+  const sb = createBrowserClient(SB_URL, SB_KEY, {
+    cookieOptions:{ domain:'.makelaarsvan.nl', path:'/', sameSite:'lax', secure:true, maxAge:60*60*24*30 }
+  });
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session || !session.user){
+    melding('Log eerst in via de portal om je beloningen te zien.<br><br><a href="/">Naar de portal &rarr;</a>');
+  } else {
+    const { data:prof } = await sb.from('gebruikers').select('id, naam, rol').eq('auth_uuid', session.user.id).maybeSingle();
+    if(!prof){ melding('Geen profiel gevonden voor dit account.'); }
+    else {
+      document.getElementById('heroSub').textContent = prof.naam ? (prof.naam+' \u2014 je vergoedingen uit de pool') : 'Je vergoedingen uit de pool';
+      const { data:rows, error } = await sb.from('beloningen')
+        .select('type, bedrag, status, adres, klant_naam, factuurnummer, aangemaakt_op')
+        .eq('gevende_makelaar_id', prof.id)
+        .order('aangemaakt_op', { ascending:false });
+      if(error){ melding('Kon de beloningen niet laden. Probeer het later opnieuw.'); }
+      else if(!rows || rows.length===0){
+        main.innerHTML='<div class="leeg">Je hebt nog geen beloningen. Zodra een door jou doorgegeven lead tot een deal leidt, verschijnt die hier.</div>';
+      } else {
+        let openTotaal=0, uitTotaal=0;
+        rows.forEach(r=>{ const b=Number(r.bedrag)||0; if(r.status==='uitbetaald') uitTotaal+=b; else openTotaal+=b; });
+        const rijenHtml = rows.map(r=>{
+          const b=Number(r.bedrag)||0;
+          const tlabel=TYPE_LABEL[r.type]||r.type;
+          const slabel=STATUS_LABEL[r.status]||r.status;
+          const stag=r.status==='uitbetaald'?'tag-uitbetaald':'tag-concept';
+          const datum=r.aangemaakt_op?new Date(r.aangemaakt_op).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):'';
+          const meta=[tlabel, r.klant_naam||'', datum].filter(Boolean).join(' &middot; ');
+          return '<div class="rij"><div><div class="rij-adres">'+(r.adres||'Onbekend adres')+'</div><div class="rij-meta">'+meta+'</div></div>'+
+                 '<div class="rij-rechts"><div class="rij-bedrag">'+euro.format(b)+'</div><span class="tag '+stag+'">'+slabel+'</span></div></div>';
+        }).join('');
+        main.innerHTML =
+          '<div class="totaal"><div><div class="totaal-label">Openstaand tegoed</div><div class="totaal-sub">nog niet uitbetaald</div></div>'+
+          '<div class="totaal-bedrag">'+euro.format(openTotaal)+'</div></div>'+
+          (uitTotaal>0?'<div class="totaal"><div><div class="totaal-label">Reeds uitbetaald</div></div><div class="totaal-bedrag" style="font-size:24px">'+euro.format(uitTotaal)+'</div></div>':'')+
+          '<div class="lijst">'+rijenHtml+'</div>';
+      }
+    }
+  }
+}catch(e){
+  console.error('Beloningen laden faalde:', e);
+  melding('De pagina kon niet laden. Ververs de pagina of probeer het later opnieuw.');
+}
+</script>
+</body>
+</html>
