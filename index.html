@@ -51,6 +51,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 .mavd-next{font-size:12px;color:#B0ACA2;margin-top:.6rem}
 .footer{text-align:center;padding:2rem;font-size:12px;color:#B0ACA2}
 .footer b{color:#1A2B5F}
+.rg-hide{display:none!important}
 </style>
 </head>
 <body>
@@ -79,7 +80,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="logo-sub">MakelaarsVan Amsterdam</div>
     </div>
   </div>
-  <div class="header-right" style="display:flex;align-items:center;gap:12px"><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 1.0</span></div>
+  <div class="header-right" style="display:flex;align-items:center;gap:12px"><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 2.0</span></div>
 </header>
 <div class="hero">
   <h1>MvA Intelligence</h1>
@@ -90,7 +91,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
   <div class="section-title">Actieve modules</div>
   <div class="grid">
 
-    <a href="https://q-and-a-mva.netlify.app" class="card" style="animation-delay:0ms">
+    <a href="https://q-and-a-mva.netlify.app" class="card" data-roles="directie,makelaar,makelaar-mentor,extern" style="animation-delay:0ms">
       <div class="card-top">
         <div class="card-icon ic-blue">&#129302;</div>
         <div><div class="card-title">Q&amp;A Kennisbank</div><div class="card-desc">Stel vragen over MVA-processen, leveranciers, Ninja Selling en alle modules. Twee lagen: makelaars en directie.</div></div>
@@ -98,7 +99,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="https://mva-documenten.netlify.app" class="card" style="animation-delay:60ms">
+    <a href="https://mva-documenten.netlify.app" class="card" data-roles="directie,makelaar,makelaar-mentor" style="animation-delay:60ms">
       <div class="card-top">
         <div class="card-icon ic-orange">&#128101;</div>
         <div><div class="card-title">Leveranciers</div><div class="card-desc">Alle 56 actieve partners en leveranciers. Met contactgegevens, onboarding instructies en contractinformatie.</div></div>
@@ -106,7 +107,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="https://mvaleadpool.netlify.app" class="card" style="animation-delay:120ms">
+    <a href="https://mvaleadpool.netlify.app" class="card" data-roles="directie,makelaar,makelaar-mentor" style="animation-delay:120ms">
       <div class="card-top">
         <div class="card-icon ic-green">&#127968;</div>
         <div><div class="card-title">MVA Leadpool</div><div class="card-desc">Lead-sharing systeem. Geef leads door na bezichtigingen en bel leads van collega-makelaars op via de pool.</div></div>
@@ -114,7 +115,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
 
-    <a href="https://intranet.makelaars-in-amsterdam.nl" target="_blank" class="card" style="animation-delay:180ms">
+    <a href="https://intranet.makelaars-in-amsterdam.nl" target="_blank" class="card" data-roles="directie,makelaar,makelaar-mentor" style="animation-delay:180ms">
       <div class="card-top">
         <div class="card-icon ic-blue">&#127760;</div>
         <div><div class="card-title">Intranet MVA</div><div class="card-desc">Leaddistributie schema, telefoonnotitie, postcodes per makelaar en instructies.</div></div>
@@ -124,8 +125,8 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 
   </div>
 
-  <div class="section-title">Live info</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="section-title" data-roles="directie,makelaar,makelaar-mentor">Live info</div>
+  <div data-roles="directie,makelaar,makelaar-mentor" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <div class="mavd-widget">
       <div class="mavd-top">
         <div class="mavd-icon">&#128200;</div>
@@ -151,14 +152,14 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
   </div>
 
   <div class="section-title" style="margin-top:2rem">&nbsp;</div>
-  <a href="https://q-and-a-mva.netlify.app/admin.html" class="card card-directie" style="animation-delay:240ms">
+  <a href="https://q-and-a-mva.netlify.app/admin.html" class="card card-directie" data-roles="directie" style="animation-delay:240ms">
     <div class="card-top">
       <div class="card-icon" style="background:#FCEBEB">&#9881;&#65039;</div>
       <div><div class="card-title">Gebruikersbeheer</div><div class="card-desc">Directie: gebruikers toevoegen, activeren en verwijderen. Wachtwoorden beheren voor alle modules.</div></div>
     </div>
     <div class="card-footer"><span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
   </a>
-      <a href="/onderhoud.html" class="card card-directie">
+      <a href="/onderhoud.html" class="card card-directie" data-roles="directie">
         <div class="card-top">
           <div class="card-icon">🔧</div>
           <div>
@@ -172,7 +173,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         </div>
       </a>
 
-      <a href="https://mva-platform-kosten.netlify.app" class="card card-directie">
+      <a href="https://mva-platform-kosten.netlify.app" class="card card-directie" data-roles="directie">
         <div class="card-top">
           <div class="card-icon" style="background:#FCEBEB">&#128176;</div>
           <div>
@@ -186,7 +187,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         </div>
       </a>
 
-      <a href="https://mva-finance.netlify.app" class="card card-directie">
+      <a href="https://mva-finance.netlify.app" class="card card-directie" data-roles="directie,extern">
         <div class="card-top">
           <div class="card-icon" style="background:#FCEBEB">&#128737;&#65039;</div>
           <div>
@@ -200,7 +201,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         </div>
       </a>
 
-      <a href="https://mva-finance.netlify.app/beloningen.html" class="card card-directie">
+      <a href="https://mva-finance.netlify.app/beloningen.html" class="card card-directie" data-roles="directie">
         <div class="card-top">
           <div class="card-icon" style="background:#FCEBEB">&#128176;</div>
           <div>
@@ -214,8 +215,8 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         </div>
       </a>
 
-  <div class="section-title">Binnenkort beschikbaar</div>
-  <div class="grid">
+  <div class="section-title" data-roles="directie,makelaar,makelaar-mentor">Binnenkort beschikbaar</div>
+  <div class="grid" data-roles="directie,makelaar,makelaar-mentor">
 
     <a href="#" class="card card-disabled">
       <div class="card-top">
@@ -305,6 +306,34 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 </script>
 
 <script>
+// --- Centrale toegang MvA Intelligence ---
+// Op het eigen domein (*.makelaarsvan.nl) draait echte Supabase SSO via een
+// gedeelde cookie op .makelaarsvan.nl. Op *.netlify.app blijft de bestaande
+// hardcoded flow als vangnet staan (onzichtbaar bouwen tot de cut).
+window.MVA_SSO = location.hostname.endsWith('makelaarsvan.nl');
+
+function applyRoleGating(rol){
+  document.querySelectorAll('[data-roles]').forEach(function(el){
+    var allowed = el.getAttribute('data-roles').split(',').map(function(s){return s.trim();});
+    if(allowed.indexOf(rol) >= 0) el.classList.remove('rg-hide');
+    else el.classList.add('rg-hide');
+  });
+}
+
+// Inline onclick blijft portalLogin()/portalLogout() aanroepen; deze routeren.
+function portalLogin(){
+  if(window.MVA_SSO){
+    if(window.__ssoLogin) window.__ssoLogin();
+    else document.getElementById('plErr').textContent='Even geduld, inlogservice laadt...';
+  } else { legacyLogin(); }
+}
+function portalLogout(){
+  if(window.MVA_SSO){ if(window.__ssoLogout) window.__ssoLogout(); }
+  else { legacyLogout(); }
+}
+</script>
+
+<script>
 var PORTAL_USERS = {
   'toncoffeng@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Ton Coffeng'},
   'hanskoppes@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Hans Koppes'},
@@ -312,7 +341,7 @@ var PORTAL_USERS = {
   'moniqueklaver@makelaarsvan.nl': {pw:'MVA2026!', level:'makelaar', name:'Monique Klaver'},
   'rogierdevries@makelaarsvan.nl': {pw:'MVA2026!', level:'makelaar', name:'Rogier de Vries'}
 };
-function portalLogin(){
+function legacyLogin(){
   var em=document.getElementById('plEmail').value.trim().toLowerCase();
   var pw=document.getElementById('plPwd').value;
   var u=PORTAL_USERS[em];
@@ -322,8 +351,9 @@ function portalLogin(){
   document.getElementById('portalLogoutBtn').style.display='inline-flex';
   document.getElementById('portalUserName').textContent=u.name;
   document.getElementById('portalUserName').style.display='inline';
+  applyRoleGating(u.level);
 }
-function portalLogout(){
+function legacyLogout(){
   sessionStorage.removeItem('mva_portal_user');
   document.getElementById('portalLogin').style.display='flex';
   document.getElementById('portalLogoutBtn').style.display='none';
@@ -333,6 +363,7 @@ function portalLogout(){
 }
 // Check sessie bij laden
 window.addEventListener('load', function(){
+  if(window.MVA_SSO) return; // SSO regelt dit in de module hieronder
   var s=sessionStorage.getItem('mva_portal_user');
   if(s){
     var u=JSON.parse(s);
@@ -340,8 +371,68 @@ window.addEventListener('load', function(){
     document.getElementById('portalLogoutBtn').style.display='inline-flex';
     document.getElementById('portalUserName').textContent=u.name;
     document.getElementById('portalUserName').style.display='inline';
+    applyRoleGating(u.level);
   }
 });
 </script>
+
+<script type="module">
+if(window.MVA_SSO){
+  try{
+    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+    const SB_URL = 'https://olfcrzusdkijxroxvsgm.supabase.co';
+    const SB_KEY = 'sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
+    const sb = createBrowserClient(SB_URL, SB_KEY, {
+      cookieOptions: { domain: '.makelaarsvan.nl', path: '/', sameSite: 'lax', secure: true, maxAge: 60*60*24*30 }
+    });
+
+    async function profiel(user){
+      const { data, error } = await sb.from('gebruikers')
+        .select('naam, rol, actief').eq('auth_uuid', user.id).maybeSingle();
+      return { data, error };
+    }
+    function toonApp(p){
+      document.getElementById('portalLogin').style.display='none';
+      document.getElementById('portalLogoutBtn').style.display='inline-flex';
+      var nm=document.getElementById('portalUserName'); nm.textContent=p.naam||''; nm.style.display='inline';
+      applyRoleGating(p.rol);
+    }
+
+    window.__ssoLogin = async function(){
+      const err=document.getElementById('plErr'); err.textContent='';
+      const em=document.getElementById('plEmail').value.trim().toLowerCase();
+      const pw=document.getElementById('plPwd').value;
+      if(!em||!pw){ err.textContent='Vul e-mail en wachtwoord in'; return; }
+      err.textContent='Bezig met inloggen...';
+      const r1 = await sb.auth.signInWithPassword({ email:em, password:pw });
+      if(r1.error||!r1.data||!r1.data.user){ err.textContent='Ongeldige inloggegevens'; return; }
+      const r2 = await profiel(r1.data.user);
+      if(r2.error||!r2.data){ await sb.auth.signOut(); err.textContent='Geen profiel gevonden voor dit account'; return; }
+      if(r2.data.actief===false){ await sb.auth.signOut(); err.textContent='Dit account is niet actief'; return; }
+      err.textContent=''; toonApp(r2.data);
+    };
+    window.__ssoLogout = async function(){
+      await sb.auth.signOut();
+      document.getElementById('portalLogin').style.display='flex';
+      document.getElementById('portalLogoutBtn').style.display='none';
+      document.getElementById('portalUserName').style.display='none';
+      document.getElementById('plPwd').value='';
+      document.getElementById('plErr').textContent='';
+    };
+
+    // Al ingelogd via de gedeelde sessie? Dan meteen door.
+    const cur = await sb.auth.getSession();
+    if(cur.data.session && cur.data.session.user){
+      const r = await profiel(cur.data.session.user);
+      if(r.data && r.data.actief!==false) toonApp(r.data);
+    }
+  } catch(e){
+    console.error('SSO init faalde:', e);
+    var el=document.getElementById('plErr');
+    if(el) el.textContent='Inlogservice tijdelijk niet bereikbaar. Probeer het zo opnieuw.';
+  }
+}
+</script>
+
 </body>
 </html>
