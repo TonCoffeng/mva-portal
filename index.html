@@ -526,6 +526,10 @@ if('serviceWorker' in navigator){
 <style>
 #mvaai-launch{position:fixed;right:22px;bottom:22px;z-index:600;width:54px;height:54px;border-radius:50%;background:#E8500A;border:none;box-shadow:0 6px 20px rgba(232,80,10,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
 #mvaai-launch:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(232,80,10,.5)}
+#mvaai-hint{position:fixed;right:86px;bottom:30px;z-index:600;background:#fff;color:#1A2B5F;font-size:13px;font-weight:500;padding:.55rem .85rem;border-radius:20px;box-shadow:0 4px 16px rgba(26,43,95,.18);cursor:pointer;border:1px solid #E2DFD8;max-width:210px;line-height:1.3;animation:mvaai-up .3s ease both}
+#mvaai-hint:hover{border-color:#E8500A}
+#mvaai-hint.mvaai-hint--hidden{display:none}
+@media(max-width:520px){#mvaai-hint{display:none!important}}
 #mvaai-panel{position:fixed;right:22px;bottom:88px;z-index:600;width:360px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 130px);background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(26,43,95,.28);display:none;flex-direction:column;overflow:hidden;border:1px solid #E2DFD8}
 #mvaai-panel.mvaai-open{display:flex;animation:mvaai-up .2s ease both}
 @keyframes mvaai-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -552,6 +556,7 @@ if('serviceWorker' in navigator){
 .mvaai-typing{align-self:flex-start;color:#B0ACA2;font-size:13px;padding:.3rem .4rem}
 </style>
 
+<div id="mvaai-hint" onclick="mvaaiToggle()">Heb je een verbeterpunt of wens?</div>
 <button id="mvaai-launch" title="Vraag de MvA-assistent" onclick="mvaaiToggle()" aria-label="Open assistent">
   <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C7 3 3 6.4 3 10.6c0 2.3 1.2 4.3 3.1 5.7-.1 1-.5 2.3-1.4 3.2 1.6-.2 3-.8 4-1.6.97.26 2 .4 3.3.4 5 0 9-3.4 9-7.6S17 3 12 3z" fill="#fff"/></svg>
 </button>
@@ -585,7 +590,10 @@ if('serviceWorker' in navigator){
   window.mvaaiToggle = function(){
     var p = document.getElementById('mvaai-panel');
     p.classList.toggle('mvaai-open');
-    if(p.classList.contains('mvaai-open')){
+    var open = p.classList.contains('mvaai-open');
+    var hint = document.getElementById('mvaai-hint');
+    if(hint) hint.classList.toggle('mvaai-hint--hidden', open);
+    if(open){
       setTimeout(function(){ document.getElementById('mvaai-input').focus(); }, 50);
     }
   };
