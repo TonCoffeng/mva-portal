@@ -522,5 +522,153 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+<!-- ===== MvA-assistent (Claude chat-widget) ===== -->
+<style>
+#mvaai-launch{position:fixed;right:22px;bottom:22px;z-index:600;width:54px;height:54px;border-radius:50%;background:#E8500A;border:none;box-shadow:0 6px 20px rgba(232,80,10,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+#mvaai-launch:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(232,80,10,.5)}
+#mvaai-panel{position:fixed;right:22px;bottom:88px;z-index:600;width:360px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 130px);background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(26,43,95,.28);display:none;flex-direction:column;overflow:hidden;border:1px solid #E2DFD8}
+#mvaai-panel.mvaai-open{display:flex;animation:mvaai-up .2s ease both}
+@keyframes mvaai-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.mvaai-head{background:#1A2B5F;color:#fff;padding:.85rem 1rem;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.mvaai-head-ic{width:30px;height:30px;border-radius:7px;background:#E8500A;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.mvaai-head-txt{flex:1}
+.mvaai-head-title{font-size:14px;font-weight:600;line-height:1.2}
+.mvaai-head-sub{font-size:11px;color:rgba(255,255,255,.55)}
+.mvaai-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;line-height:1;padding:0 6px}
+.mvaai-close:hover{color:#fff}
+.mvaai-body{flex:1;overflow-y:auto;padding:1rem;background:#F6F4EF;display:flex;flex-direction:column;gap:10px}
+.mvaai-msg{max-width:85%;padding:.6rem .85rem;border-radius:12px;font-size:13.5px;line-height:1.5;word-wrap:break-word}
+.mvaai-user{align-self:flex-end;background:#1A2B5F;color:#fff;border-bottom-right-radius:4px}
+.mvaai-bot{align-self:flex-start;background:#fff;color:#1A2B5F;border:1px solid #E2DFD8;border-bottom-left-radius:4px}
+.mvaai-bot strong{font-weight:600}
+.mvaai-bot ul{margin:.3rem 0 .3rem 1.1rem;padding:0}
+.mvaai-bot li{margin:.15rem 0}
+.mvaai-empty{margin:auto;text-align:center;color:#B0ACA2;font-size:13px;padding:1rem;line-height:1.5}
+.mvaai-foot{flex-shrink:0;border-top:1px solid #E2DFD8;padding:.6rem;display:flex;gap:8px;background:#fff}
+.mvaai-input{flex:1;border:1.5px solid #E2DFD8;border-radius:10px;padding:.55rem .7rem;font-size:13.5px;font-family:inherit;resize:none;max-height:90px;outline:none}
+.mvaai-input:focus{border-color:#1A2B5F}
+.mvaai-send{flex-shrink:0;width:40px;border:none;border-radius:10px;background:#E8500A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mvaai-send:disabled{opacity:.45;cursor:default}
+.mvaai-typing{align-self:flex-start;color:#B0ACA2;font-size:13px;padding:.3rem .4rem}
+</style>
+
+<button id="mvaai-launch" title="Vraag de MvA-assistent" onclick="mvaaiToggle()" aria-label="Open assistent">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C7 3 3 6.4 3 10.6c0 2.3 1.2 4.3 3.1 5.7-.1 1-.5 2.3-1.4 3.2 1.6-.2 3-.8 4-1.6.97.26 2 .4 3.3.4 5 0 9-3.4 9-7.6S17 3 12 3z" fill="#fff"/></svg>
+</button>
+
+<div id="mvaai-panel" role="dialog" aria-label="MvA-assistent">
+  <div class="mvaai-head">
+    <div class="mvaai-head-ic">&#129302;</div>
+    <div class="mvaai-head-txt">
+      <div class="mvaai-head-title">MvA-assistent</div>
+      <div class="mvaai-head-sub">Powered by Claude</div>
+    </div>
+    <button class="mvaai-close" onclick="mvaaiToggle()" aria-label="Sluiten">&times;</button>
+  </div>
+  <div class="mvaai-body" id="mvaai-body">
+    <div class="mvaai-empty" id="mvaai-empty">Stel je vraag — ik help met het platform, je werk als makelaar en meer.</div>
+  </div>
+  <div class="mvaai-foot">
+    <textarea id="mvaai-input" class="mvaai-input" rows="1" placeholder="Typ een bericht..." onkeydown="mvaaiKey(event)"></textarea>
+    <button id="mvaai-send" class="mvaai-send" onclick="mvaaiSend()" aria-label="Verstuur">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var SYSTEM = "Je bent de assistent binnen MvA Intelligence, het interne platform van Makelaars Van Amsterdam (een makelaarskantoor in Amsterdam). Antwoord in het Nederlands, beknopt en behulpzaam. Help met vragen over het platform, makelaarswerk, teksten schrijven en algemene taken.";
+  var history = [];
+  var busy = false;
+
+  window.mvaaiToggle = function(){
+    var p = document.getElementById('mvaai-panel');
+    p.classList.toggle('mvaai-open');
+    if(p.classList.contains('mvaai-open')){
+      setTimeout(function(){ document.getElementById('mvaai-input').focus(); }, 50);
+    }
+  };
+
+  window.mvaaiKey = function(e){
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); window.mvaaiSend(); }
+  };
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function md(s){
+    var lines = esc(s).split('\n');
+    var out = [], inList = false;
+    for(var i=0;i<lines.length;i++){
+      var m = lines[i].match(/^\s*[-*]\s+(.*)$/);
+      if(m){
+        if(!inList){ out.push('<ul>'); inList = true; }
+        out.push('<li>'+m[1]+'</li>');
+      } else {
+        if(inList){ out.push('</ul>'); inList = false; }
+        out.push(lines[i]);
+      }
+    }
+    if(inList) out.push('</ul>');
+    var html = out.join('\n');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n(?!<\/?ul>|<li>)/g, '<br>');
+    html = html.replace(/<br>\s*(<ul>)/g, '$1').replace(/(<\/ul>)\s*<br>/g, '$1');
+    return html;
+  }
+
+  function addMsg(role, text){
+    var body = document.getElementById('mvaai-body');
+    var empty = document.getElementById('mvaai-empty'); if(empty) empty.remove();
+    var div = document.createElement('div');
+    div.className = 'mvaai-msg ' + (role === 'user' ? 'mvaai-user' : 'mvaai-bot');
+    div.innerHTML = role === 'user' ? esc(text).replace(/\n/g,'<br>') : md(text);
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  window.mvaaiSend = async function(){
+    if(busy) return;
+    var input = document.getElementById('mvaai-input');
+    var text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    addMsg('user', text);
+    history.push({ role:'user', content:text });
+
+    busy = true;
+    document.getElementById('mvaai-send').disabled = true;
+    var body = document.getElementById('mvaai-body');
+    var typing = document.createElement('div');
+    typing.className = 'mvaai-typing'; typing.textContent = 'Claude denkt na...';
+    body.appendChild(typing); body.scrollTop = body.scrollHeight;
+
+    try{
+      var res = await fetch('/.netlify/functions/claude', {
+        method:'POST',
+        headers:{ 'content-type':'application/json' },
+        body: JSON.stringify({ messages: history, system: SYSTEM, max_tokens: 1024 })
+      });
+      var data = await res.json();
+      typing.remove();
+      if(!res.ok){
+        addMsg('bot', 'Er ging iets mis (' + res.status + '). ' + (data.error||''));
+      } else {
+        var answer = data.text || '(leeg antwoord)';
+        addMsg('bot', answer);
+        history.push({ role:'assistant', content: answer });
+      }
+    } catch(e){
+      typing.remove();
+      addMsg('bot', 'Netwerkfout: ' + e.message);
+    } finally {
+      busy = false;
+      document.getElementById('mvaai-send').disabled = false;
+      input.focus();
+    }
+  };
+})();
+</script>
+<!-- ===== einde MvA-assistent ===== -->
 </body>
 </html>
