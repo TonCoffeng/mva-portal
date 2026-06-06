@@ -89,7 +89,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="logo-sub">Makelaars Van Amsterdam</div>
     </div>
   </div>
-  <div class="header-right" style="display:flex;align-items:center;gap:12px"><select id="rolePreview" onchange="previewRol(this.value)" title="Alleen directie: bekijk de portal als een andere rol" style="display:none;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:#1A2B5F;color:#fff;font-size:12px;font-family:inherit;padding:0 8px;cursor:pointer"><option value="directie">Bekijk als: directie</option><option value="makelaar">Bekijk als: makelaar</option><option value="makelaar-mentor">Bekijk als: mentor</option><option value="extern">Bekijk als: extern</option><option value="compliance">Bekijk als: compliance</option></select><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 2.6</span></div>
+  <div class="header-right" style="display:flex;align-items:center;gap:12px"><select id="rolePreview" onchange="previewRol(this.value)" title="Alleen directie: bekijk de portal als een andere rol" style="display:none;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:#1A2B5F;color:#fff;font-size:12px;font-family:inherit;padding:0 8px;cursor:pointer"><option value="directie">Bekijk als: directie</option><option value="makelaar">Bekijk als: makelaar</option><option value="makelaar-mentor">Bekijk als: mentor</option><option value="extern">Bekijk als: extern</option><option value="compliance">Bekijk als: compliance</option></select><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 2.7</span></div>
 </header>
 <div class="hero">
   <h1>MvA Intelligence</h1>
@@ -204,12 +204,12 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         </div>
       </a>
 
-      <a href="https://finance.makelaarsvan.nl" class="card card-directie" data-roles="directie,extern,compliance">
+      <a href="https://finance.makelaarsvan.nl" class="card card-directie" data-roles="directie,extern,compliance" data-users="7">
         <div class="card-top">
           <div class="card-icon" style="background:#FCEBEB">&#128737;&#65039;</div>
           <div>
             <div class="card-title">WWFT-controle</div>
-            <div class="card-desc">Directie &amp; compliance: controle van ID/WWFT op courtagenota's, voor eigen klant en wederpartij. Kleurenschema en courtage-blokkade tot de check compleet is.</div>
+            <div class="card-desc">Controle van ID/WWFT op courtagenota's (eigen klant en wederpartij). Directie en compliance bewerken; makelaars zien hun eigen dossiers. Kleurenschema en courtage-blokkade tot de check compleet is.</div>
           </div>
         </div>
         <div class="card-footer">
@@ -361,10 +361,14 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 // hardcoded flow als vangnet staan (onzichtbaar bouwen tot de cut).
 window.MVA_SSO = location.hostname.endsWith('makelaarsvan.nl');
 
-function applyRoleGating(rol){
-  document.querySelectorAll('[data-roles]').forEach(function(el){
-    var allowed = el.getAttribute('data-roles').split(',').map(function(s){return s.trim();});
-    if(allowed.indexOf(rol) >= 0) el.classList.remove('rg-hide');
+function applyRoleGating(rol, userId){
+  document.querySelectorAll('[data-roles], [data-users]').forEach(function(el){
+    var show = false;
+    var roles = el.getAttribute('data-roles');
+    if(roles && roles.split(',').map(function(s){return s.trim();}).indexOf(rol) >= 0) show = true;
+    var users = el.getAttribute('data-users');
+    if(!show && users && userId != null && users.split(',').map(function(s){return s.trim();}).indexOf(String(userId)) >= 0) show = true;
+    if(show) el.classList.remove('rg-hide');
     else el.classList.add('rg-hide');
   });
 }
@@ -453,14 +457,14 @@ if(window.MVA_SSO){
 
     async function profiel(user){
       const { data, error } = await sb.from('gebruikers')
-        .select('naam, rol, actief').eq('auth_uuid', user.id).maybeSingle();
+        .select('id, naam, rol, actief').eq('auth_uuid', user.id).maybeSingle();
       return { data, error };
     }
     function toonApp(p){
       document.getElementById('portalLogin').style.display='none';
       document.getElementById('portalLogoutBtn').style.display='inline-flex';
       var nm=document.getElementById('portalUserName'); nm.textContent=p.naam||''; nm.style.display='inline';
-      applyRoleGating(p.rol);
+      applyRoleGating(p.rol, p.id);
       var rp=document.getElementById('rolePreview');
       if(rp){ if(p.rol==='directie'){ rp.value='directie'; rp.style.display='inline-block'; } else { rp.style.display='none'; } }
     }
