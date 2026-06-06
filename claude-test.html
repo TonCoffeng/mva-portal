@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude-koppeling test</title>
+  <style>
+    body { font-family: -apple-system, system-ui, "Segoe UI", sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #1a2238; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    p.sub { color: #555; margin-top: 0; }
+    textarea { width: 100%; min-height: 90px; padding: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+    button { margin-top: 12px; background: #1a2238; color: #fff; border: 0; padding: 12px 22px; font-size: 1rem; border-radius: 8px; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #out { margin-top: 20px; padding: 16px; background: #f4f5f8; border-radius: 8px; white-space: pre-wrap; min-height: 40px; line-height: 1.5; }
+    .err { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Claude-koppeling test</h1>
+  <p class="sub">Typ een bericht en klik op verstuur. Het antwoord komt via de Netlify-function rechtstreeks van de Claude API.</p>
+
+  <textarea id="prompt">Geef in één zin een tip voor een goede woningpresentatie.</textarea>
+  <button id="send">Verstuur naar Claude</button>
+  <div id="out"></div>
+
+  <script>
+    const btn = document.getElementById('send');
+    const out = document.getElementById('out');
+
+    btn.addEventListener('click', async () => {
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) return;
+
+      btn.disabled = true;
+      out.className = '';
+      out.textContent = 'Bezig…';
+
+      try {
+        const res = await fetch('/.netlify/functions/claude', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          out.className = 'err';
+          out.textContent = 'Fout (' + res.status + '): ' + (data.error || JSON.stringify(data));
+        } else {
+          out.textContent = data.text || '(leeg antwoord)';
+        }
+      } catch (e) {
+        out.className = 'err';
+        out.textContent = 'Netwerkfout: ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
