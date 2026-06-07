@@ -607,7 +607,7 @@ if('serviceWorker' in navigator){
 
 <script>
 (function(){
-  var SYSTEM = "Je bent de assistent binnen MvA Intelligence, het interne platform van Makelaars Van Amsterdam (een makelaarskantoor in Amsterdam). Antwoord in het Nederlands, beknopt en behulpzaam. Help met vragen over het platform, makelaarswerk, teksten schrijven en algemene taken. Gebruikers kunnen via deze chat ook verbeterpunten en wensen indienen die met een knop naar de directie gaan; denk daarin mee en help de wens helder te formuleren.";
+  var SYSTEM = "Je bent de assistent binnen MvA Intelligence, het interne platform van Makelaars Van Amsterdam (een makelaarskantoor in Amsterdam). Antwoord in het Nederlands, beknopt en behulpzaam. Help met vragen over het platform, makelaarswerk, teksten schrijven en algemene taken. Gebruikers kunnen via deze chat ook verbeterpunten en wensen indienen die met een knop naar de directie gaan; denk daarin mee en help de wens helder te formuleren. Schrijf in gewone lopende tekst zonder opmaaktekens zoals koppen (##), aanhalingsblokken (>) of overdreven sterretjes. Gebruik hooguit een eenvoudige opsomming met streepjes waar dat echt helpt.";
   var apiHistory = [];   // berichten voor Claude (kan een printscreen bevatten)
   var transcript = [];   // tekst-only weergave voor de directie-mail
   var pending = null;    // { dataUrl, mediaType, base64 } - nog niet verstuurde printscreen
@@ -629,19 +629,30 @@ if('serviceWorker' in navigator){
 
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+  function inline(t){ return esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
   function md(s){
-    var lines = esc(s).split('\n');
+    var lines = String(s).split('\n');
     var out = [], inList = false;
+    function closeList(){ if(inList){ out.push('</ul>'); inList = false; } }
     for(var i=0;i<lines.length;i++){
-      var m = lines[i].match(/^\s*[-*]\s+(.*)$/);
-      if(m){ if(!inList){ out.push('<ul>'); inList = true; } out.push('<li>'+m[1]+'</li>'); }
-      else { if(inList){ out.push('</ul>'); inList = false; } out.push(lines[i]); }
+      var raw = lines[i];
+      var li = raw.match(/^\s*[-*]\s+(.*)$/);
+      if(li){ if(!inList){ out.push('<ul>'); inList = true; } out.push('<li>'+inline(li[1])+'</li>'); continue; }
+      closeList();
+      var h = raw.match(/^\s*#{1,6}\s+(.*)$/);
+      var bq = raw.match(/^\s*>\s?(.*)$/);
+      if(h){ out.push('<div style="font-weight:600;margin:4px 0">'+inline(h[1])+'</div>'); }
+      else if(bq){ out.push(inline(bq[1])); }
+      else { out.push(inline(raw)); }
     }
-    if(inList) out.push('</ul>');
-    var html = out.join('\n');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\n(?!<\/?ul>|<li>)/g, '<br>');
-    html = html.replace(/<br>\s*(<ul>)/g, '$1').replace(/(<\/ul>)\s*<br>/g, '$1');
+    closeList();
+    var html = '';
+    for(var j=0;j<out.length;j++){
+      var seg = out[j];
+      var isBlock = /^<(ul>|\/ul>|li>|div)/.test(seg);
+      if(j>0){ var prev = out[j-1]; var prevBlock = /^<(ul>|\/ul>|li>|div)/.test(prev); if(!isBlock && !prevBlock) html += '<br>'; }
+      html += seg;
+    }
     return html;
   }
 
