@@ -150,7 +150,11 @@ exports.handler = async (event) => {
       console.error('[meldpunt] opslaan mislukt:', e.message);
     }
     if (opgeslagen && (type === 'bug' || type === 'tip') && RESEND_KEY) {
-      mailNaarTon(rij).catch((e) => console.warn('[meldpunt] mail mislukt:', e.message));
+      try {
+        await mailNaarTon(rij);
+      } catch (e) {
+        console.warn('[meldpunt] mail mislukt:', e.message);
+      }
     }
   }
 
