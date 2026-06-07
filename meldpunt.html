@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meldpunt &middot; MvA Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:#F6F4EF;display:flex;flex-direction:column;height:100vh}
+header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:#E8500A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+.logo-name{font-size:14px;font-weight:600;color:#fff;line-height:1.1}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase}
+.back{font-size:13px;color:rgba(255,255,255,.8);text-decoration:none;display:flex;align-items:center;gap:5px}
+.back:hover{color:#fff}
+
+.wrap{flex:1;display:flex;flex-direction:column;max-width:760px;width:100%;margin:0 auto;min-height:0}
+.intro{padding:1.4rem 1.25rem .4rem}
+.intro h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:24px;color:#1A2B5F}
+.intro p{font-size:13px;color:#6B6760;margin-top:.3rem;line-height:1.55}
+
+#chat{flex:1;overflow-y:auto;padding:1rem 1.25rem 1.5rem;display:flex;flex-direction:column;gap:.7rem}
+.msg{max-width:84%;padding:.7rem .95rem;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;animation:up .25s ease both}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{background:#fff;border:1px solid #E2DFD8;color:#2A2A2A;align-self:flex-start;border-bottom-left-radius:4px}
+.msg.me{background:#1A2B5F;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.saved{align-self:center;background:#EAF3DE;color:#27500A;font-size:13px;font-weight:500;padding:.55rem 1rem;border-radius:10px;display:flex;align-items:center;gap:8px;text-align:center}
+.typing{align-self:flex-start;background:#fff;border:1px solid #E2DFD8;border-bottom-left-radius:4px;padding:.8rem 1rem;border-radius:14px;display:flex;gap:5px}
+.typing span{width:7px;height:7px;background:#B0ACA2;border-radius:50%;animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+.composer{flex-shrink:0;border-top:1px solid #E7E3DB;background:#F6F4EF;padding:.75rem 1.25rem;padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
+.composer-inner{max-width:760px;margin:0 auto;display:flex;gap:.6rem;align-items:flex-end}
+#inp{flex:1;border:1.5px solid #E2DFD8;border-radius:12px;padding:.7rem .9rem;font-size:14px;font-family:inherit;resize:none;outline:none;max-height:140px;line-height:1.45;background:#fff}
+#inp:focus{border-color:#1A2B5F}
+#send{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;background:#E8500A;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#send:hover{background:#cf4708}
+#send:disabled{background:#D8D3C9;cursor:default}
+.hint{max-width:760px;margin:.45rem auto 0;font-size:11px;color:#B0ACA2;text-align:center}
+.newbtn{align-self:center;margin-top:.2rem;font-size:13px;color:#1A2B5F;background:none;border:1px solid #D8D3C9;border-radius:8px;padding:.45rem .9rem;cursor:pointer;font-family:inherit}
+.newbtn:hover{background:#fff}
+
+#gate{position:fixed;inset:0;background:#1A2B5F;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:2rem;z-index:50}
+#gate a{color:#fff;text-decoration:underline}
+</style>
+<meta name="theme-color" content="#1A2B5F">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    <div><div class="logo-name">Meldpunt</div><div class="logo-sub">MvA Intelligence</div></div>
+  </div>
+  <a class="back" href="https://portal.makelaarsvan.nl/">&larr; Terug naar portal</a>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Meldpunt</h1>
+    <p>Iets dat niet werkt, of een idee om het platform beter te maken? Vertel het hieronder. Claude vraagt even door en zorgt dat het netjes bij Ton terechtkomt.</p>
+  </div>
+  <div id="chat"></div>
+</div>
+
+<div class="composer">
+  <div class="composer-inner">
+    <textarea id="inp" rows="1" placeholder="Typ hier wat je tegenkwam of welk idee je hebt&hellip;"></textarea>
+    <button id="send" title="Versturen">&#10148;</button>
+  </div>
+  <div class="hint">Claude lost niet zelf op, maar legt je melding scherp vast en zet 'm door.</div>
+</div>
+
+<div id="gate" style="display:none">
+  <div>
+    <p style="font-size:16px;margin-bottom:.6rem">Je bent niet ingelogd.</p>
+    <p style="font-size:14px;opacity:.8">Open het Meldpunt via <a href="https://portal.makelaarsvan.nl/">portal.makelaarsvan.nl</a> en log eerst in.</p>
+  </div>
+</div>
+
+<script type="module">
+const SB_URL = 'https://olfcrzusdkijxroxvsgm.supabase.co';
+const SB_KEY = 'sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
+const FN = '/.netlify/functions/meldpunt';
+
+const chat = document.getElementById('chat');
+const inp  = document.getElementById('inp');
+const send = document.getElementById('send');
+
+let token = null;
+let messages = [];          // echte beurten (user/assistant) voor de API
+let bezig = false;
+let afgerond = false;
+
+// ── Sessie ophalen via gedeelde SSO-cookie ──
+let sb;
+try {
+  const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+  sb = createBrowserClient(SB_URL, SB_KEY, {
+    cookieOptions: { domain: '.makelaarsvan.nl', path: '/', sameSite: 'lax', secure: true, maxAge: 60*60*24*30 }
+  });
+  const { data } = await sb.auth.getSession();
+  if (data && data.session && data.session.access_token) {
+    token = data.session.access_token;
+  }
+} catch (e) {
+  console.error('SSO init faalde:', e);
+}
+
+if (!token) {
+  document.getElementById('gate').style.display = 'flex';
+} else {
+  bubble('bot', 'Hoi! Wat speelt er? Vertel kort wat je tegenkwam of welk idee je hebt \u2014 ik vraag daarna even door.');
+}
+
+// ── UI helpers ──
+function bubble(klasse, tekst){
+  const d = document.createElement('div');
+  d.className = 'msg ' + klasse;
+  d.textContent = tekst;
+  chat.appendChild(d);
+  scroll();
+  return d;
+}
+function scroll(){ chat.scrollTop = chat.scrollHeight; }
+function typing(){
+  const t = document.createElement('div');
+  t.className = 'typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  chat.appendChild(t); scroll();
+  return t;
+}
+function autosize(){ inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,140)+'px'; }
+inp.addEventListener('input', autosize);
+inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); verstuur(); } });
+send.addEventListener('click', verstuur);
+
+// ── Versturen ──
+async function verstuur(){
+  if(bezig || afgerond) return;
+  const tekst = inp.value.trim();
+  if(!tekst) return;
+  inp.value=''; autosize();
+  bubble('me', tekst);
+  messages.push({ role:'user', content: tekst });
+
+  bezig = true; send.disabled = true;
+  const t = typing();
+  try {
+    const res = await fetch(FN, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+      body: JSON.stringify({ messages })
+    });
+    t.remove();
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      bubble('bot', data.error || 'Er ging iets mis. Probeer het zo nog eens.');
+    } else {
+      const reply = data.reply || 'Genoteerd.';
+      bubble('bot', reply);
+      messages.push({ role:'assistant', content: reply });
+      if(data.opgeslagen){
+        const soort = data.type==='bug' ? 'bug' : (data.type==='tip' ? 'tip' : 'melding');
+        saved('\u2713 Je '+soort+' is vastgelegd. Ton krijgt er bericht van \u2014 bedankt!');
+        afgerond = true;
+        toonNieuw();
+      }
+    }
+  } catch(e){
+    t.remove();
+    bubble('bot', 'Geen verbinding. Controleer je internet en probeer het opnieuw.');
+  } finally {
+    bezig = false;
+    send.disabled = afgerond;
+    if(!afgerond) inp.focus();
+  }
+}
+
+function saved(tekst){
+  const d = document.createElement('div');
+  d.className='saved';
+  d.textContent = tekst;
+  chat.appendChild(d); scroll();
+}
+function toonNieuw(){
+  const b = document.createElement('button');
+  b.className='newbtn';
+  b.textContent='Nieuwe melding';
+  b.onclick = ()=>{
+    messages=[]; afgerond=false; send.disabled=false;
+    chat.innerHTML='';
+    bubble('bot','Top \u2014 waar gaat de volgende melding over?');
+    inp.focus();
+  };
+  chat.appendChild(b); scroll();
+}
+</script>
+
+</body>
+</html>

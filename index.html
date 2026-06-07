@@ -89,7 +89,7 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="logo-sub">Makelaars Van Amsterdam</div>
     </div>
   </div>
-  <div class="header-right" style="display:flex;align-items:center;gap:12px"><select id="rolePreview" onchange="previewRol(this.value)" title="Alleen directie: bekijk de portal als een andere rol" style="display:none;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:#1A2B5F;color:#fff;font-size:12px;font-family:inherit;padding:0 8px;cursor:pointer"><option value="directie">Bekijk als: directie</option><option value="makelaar">Bekijk als: makelaar</option><option value="makelaar-mentor">Bekijk als: mentor</option><option value="extern">Bekijk als: extern</option><option value="compliance">Bekijk als: compliance</option></select><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 2.7</span></div>
+  <div class="header-right" style="display:flex;align-items:center;gap:12px"><select id="rolePreview" onchange="previewRol(this.value)" title="Alleen directie: bekijk de portal als een andere rol" style="display:none;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:#1A2B5F;color:#fff;font-size:12px;font-family:inherit;padding:0 8px;cursor:pointer"><option value="directie">Bekijk als: directie</option><option value="makelaar">Bekijk als: makelaar</option><option value="makelaar-mentor">Bekijk als: mentor</option><option value="extern">Bekijk als: extern</option><option value="compliance">Bekijk als: compliance</option></select><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 2.8</span></div>
 </header>
 <div class="hero">
   <h1>MvA Intelligence</h1>
@@ -136,6 +136,14 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
       <div class="card-top">
         <div class="card-icon ic-green">&#128176;</div>
         <div><div class="card-title">Mijn beloningen</div><div class="card-desc">Jouw vergoedingen voor doorgegeven leads (&euro;175) en hypotheekverwijzingen (&euro;650), met je totale tegoed en de status per beloning.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="/meldpunt.html" class="card" style="animation-delay:240ms">
+      <div class="card-top">
+        <div class="card-icon ic-orange">&#128172;</div>
+        <div><div class="card-title">Meldpunt</div><div class="card-desc">Iets kapot of een idee voor het platform? Spar met Claude &mdash; bugs en tips worden meteen netjes vastgelegd en doorgezet naar Ton.</div></div>
       </div>
       <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
     </a>
@@ -465,7 +473,6 @@ if(window.MVA_SSO){
       document.getElementById('portalLogoutBtn').style.display='inline-flex';
       var nm=document.getElementById('portalUserName'); nm.textContent=p.naam||''; nm.style.display='inline';
       applyRoleGating(p.rol, p.id);
-      window.MVA_USER={naam:p.naam||'',rol:p.rol||'',id:p.id||null};
       var rp=document.getElementById('rolePreview');
       if(rp){ if(p.rol==='directie'){ rp.value='directie'; rp.style.display='inline-block'; } else { rp.style.display='none'; } }
     }
@@ -523,271 +530,5 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-<!-- ===== MvA-assistent (Claude chat-widget) ===== -->
-<style>
-#mvaai-launch{position:fixed;right:22px;bottom:22px;z-index:600;width:54px;height:54px;border-radius:50%;background:#E8500A;border:none;box-shadow:0 6px 20px rgba(232,80,10,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
-#mvaai-launch:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(232,80,10,.5)}
-#mvaai-launch svg{width:24px;height:24px}
-#mvaai-hint{position:fixed;right:86px;bottom:30px;z-index:600;background:#fff;color:#1A2B5F;font-size:13px;font-weight:500;padding:.55rem .85rem;border-radius:20px;box-shadow:0 4px 16px rgba(26,43,95,.18);cursor:pointer;border:1px solid #E2DFD8;max-width:210px;line-height:1.3;animation:mvaai-up .3s ease both}
-#mvaai-hint:hover{border-color:#E8500A}
-#mvaai-hint.mvaai-hint--hidden{display:none}
-@media(max-width:520px){#mvaai-hint{display:none!important}}
-#mvaai-panel{position:fixed;right:22px;bottom:88px;z-index:600;width:460px;max-width:calc(100vw - 32px);height:600px;max-height:calc(100vh - 120px);background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(26,43,95,.28);display:none;flex-direction:column;overflow:hidden;border:1px solid #E2DFD8}
-#mvaai-panel.mvaai-open{display:flex;animation:mvaai-up .2s ease both}
-@keyframes mvaai-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.mvaai-head{background:#1A2B5F;color:#fff;padding:.85rem 1rem;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.mvaai-head-ic{width:30px;height:30px;border-radius:7px;background:#E8500A;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.mvaai-head-txt{flex:1}
-.mvaai-head-title{font-size:14px;font-weight:600;line-height:1.2}
-.mvaai-head-sub{font-size:11px;color:rgba(255,255,255,.55)}
-.mvaai-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;line-height:1;padding:0 6px}
-.mvaai-close:hover{color:#fff}
-.mvaai-body{flex:1;overflow-y:auto;padding:1rem;background:#F6F4EF;display:flex;flex-direction:column;gap:10px}
-.mvaai-msg{max-width:85%;padding:.6rem .85rem;border-radius:12px;font-size:14px;line-height:1.55;word-wrap:break-word}
-.mvaai-user{align-self:flex-end;background:#1A2B5F;color:#fff;border-bottom-right-radius:4px}
-.mvaai-bot{align-self:flex-start;background:#fff;color:#1A2B5F;border:1px solid #E2DFD8;border-bottom-left-radius:4px}
-.mvaai-bot strong{font-weight:600}
-.mvaai-bot ul{margin:.3rem 0 .3rem 1.1rem;padding:0}
-.mvaai-bot li{margin:.15rem 0}
-.mvaai-msg img{max-width:100%;border-radius:8px;margin-top:6px;display:block}
-.mvaai-empty{margin:auto;text-align:center;color:#B0ACA2;font-size:13px;padding:1rem;line-height:1.5}
-.mvaai-typing{align-self:flex-start;color:#B0ACA2;font-size:13px;padding:.3rem .4rem}
-.mvaai-actionbar{flex-shrink:0;border-top:1px solid #E2DFD8;padding:.5rem .75rem;background:#fff}
-.mvaai-tdir{background:none;border:1px solid #E8500A;color:#E8500A;border-radius:8px;padding:.5rem .9rem;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;width:100%;transition:background .15s,color .15s}
-.mvaai-tdir:hover{background:#E8500A;color:#fff}
-.mvaai-tdir:disabled{opacity:.5;cursor:default}
-.mvaai-preview{flex-shrink:0;padding:.5rem .75rem 0;background:#fff;display:none}
-.mvaai-preview.show{display:block}
-.mvaai-thumb{position:relative;display:inline-block}
-.mvaai-thumb img{height:54px;border-radius:8px;border:1px solid #E2DFD8;display:block}
-.mvaai-thumb-x{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:#1A2B5F;color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center}
-.mvaai-foot{flex-shrink:0;border-top:1px solid #E2DFD8;padding:.6rem;display:flex;gap:8px;align-items:flex-end;background:#fff}
-.mvaai-clip{flex-shrink:0;width:38px;height:38px;border:1.5px solid #E2DFD8;border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.mvaai-clip:hover{border-color:#1A2B5F}
-.mvaai-input{flex:1;border:1.5px solid #E2DFD8;border-radius:10px;padding:.55rem .7rem;font-size:14px;font-family:inherit;resize:none;max-height:120px;outline:none}
-.mvaai-input:focus{border-color:#1A2B5F}
-.mvaai-send{flex-shrink:0;width:40px;height:38px;border:none;border-radius:10px;background:#E8500A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.mvaai-send:disabled{opacity:.45;cursor:default}
-</style>
-
-<div id="mvaai-hint" onclick="mvaaiToggle()">Heb je een verbeterpunt of wens?</div>
-<button id="mvaai-launch" title="Vraag de MvA-assistent" onclick="mvaaiToggle()" aria-label="Open assistent">
-  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C7 3 3 6.4 3 10.6c0 2.3 1.2 4.3 3.1 5.7-.1 1-.5 2.3-1.4 3.2 1.6-.2 3-.8 4-1.6.97.26 2 .4 3.3.4 5 0 9-3.4 9-7.6S17 3 12 3z" fill="#fff"/></svg>
-</button>
-
-<div id="mvaai-panel" role="dialog" aria-label="MvA-assistent">
-  <div class="mvaai-head">
-    <div class="mvaai-head-ic">&#129302;</div>
-    <div class="mvaai-head-txt">
-      <div class="mvaai-head-title">MvA-assistent</div>
-      <div class="mvaai-head-sub">Vragen, verbeterpunten &amp; wensen</div>
-    </div>
-    <button class="mvaai-close" onclick="mvaaiToggle()" aria-label="Sluiten">&times;</button>
-  </div>
-  <div class="mvaai-body" id="mvaai-body">
-    <div class="mvaai-empty" id="mvaai-empty">Stel je vraag of beschrijf je wens. Een printscreen toevoegen kan ook &mdash; via het knopje of gewoon plakken. Met &ldquo;Verstuur naar directie&rdquo; stuur je je punt rechtstreeks door.</div>
-  </div>
-  <div class="mvaai-actionbar">
-    <button id="mvaai-tdir" class="mvaai-tdir" onclick="mvaaiToDirectie()">Verstuur deze wens naar de directie</button>
-  </div>
-  <div class="mvaai-preview" id="mvaai-preview">
-    <div class="mvaai-thumb"><img alt="printscreen"><button class="mvaai-thumb-x" onclick="mvaaiClearImg()" aria-label="Verwijder">&times;</button></div>
-  </div>
-  <div class="mvaai-foot">
-    <input type="file" id="mvaai-file" accept="image/*" style="display:none" onchange="mvaaiFileChange(event)">
-    <button class="mvaai-clip" onclick="mvaaiPick()" title="Printscreen toevoegen" aria-label="Printscreen toevoegen">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5l-8.5 8.5a5 5 0 01-7-7l8.5-8.5a3.5 3.5 0 014.9 4.9L9.3 18a2 2 0 01-2.8-2.8l7.8-7.8" stroke="#1A2B5F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <textarea id="mvaai-input" class="mvaai-input" rows="1" placeholder="Typ een bericht..." onkeydown="mvaaiKey(event)"></textarea>
-    <button id="mvaai-send" class="mvaai-send" onclick="mvaaiSend()" aria-label="Verstuur">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-    </button>
-  </div>
-</div>
-
-<script>
-(function(){
-  var SYSTEM = "Je bent de assistent binnen MvA Intelligence, het interne platform van Makelaars Van Amsterdam (een makelaarskantoor in Amsterdam). Antwoord in het Nederlands, beknopt en behulpzaam. Help met vragen over het platform, makelaarswerk, teksten schrijven en algemene taken. Gebruikers kunnen via deze chat ook verbeterpunten en wensen indienen die met een knop naar de directie gaan; denk daarin mee en help de wens helder te formuleren. Schrijf in gewone lopende tekst zonder opmaaktekens zoals koppen (##), aanhalingsblokken (>) of overdreven sterretjes. Gebruik hooguit een eenvoudige opsomming met streepjes waar dat echt helpt.";
-  var apiHistory = [];   // berichten voor Claude (kan een printscreen bevatten)
-  var transcript = [];   // tekst-only weergave voor de directie-mail
-  var pending = null;    // { dataUrl, mediaType, base64 } - nog niet verstuurde printscreen
-  var lastImage = null;  // laatst toegevoegde printscreen (dataUrl) voor de wens
-  var busy = false;
-
-  window.mvaaiToggle = function(){
-    var p = document.getElementById('mvaai-panel');
-    p.classList.toggle('mvaai-open');
-    var open = p.classList.contains('mvaai-open');
-    var hint = document.getElementById('mvaai-hint');
-    if(hint) hint.classList.toggle('mvaai-hint--hidden', open);
-    if(open){ setTimeout(function(){ document.getElementById('mvaai-input').focus(); }, 50); }
-  };
-
-  window.mvaaiKey = function(e){
-    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); window.mvaaiSend(); }
-  };
-
-  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  function inline(t){ return esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
-  function md(s){
-    var lines = String(s).split('\n');
-    var out = [], inList = false;
-    function closeList(){ if(inList){ out.push('</ul>'); inList = false; } }
-    for(var i=0;i<lines.length;i++){
-      var raw = lines[i];
-      var li = raw.match(/^\s*[-*]\s+(.*)$/);
-      if(li){ if(!inList){ out.push('<ul>'); inList = true; } out.push('<li>'+inline(li[1])+'</li>'); continue; }
-      closeList();
-      var h = raw.match(/^\s*#{1,6}\s+(.*)$/);
-      var bq = raw.match(/^\s*>\s?(.*)$/);
-      if(h){ out.push('<div style="font-weight:600;margin:4px 0">'+inline(h[1])+'</div>'); }
-      else if(bq){ out.push(inline(bq[1])); }
-      else { out.push(inline(raw)); }
-    }
-    closeList();
-    var html = '';
-    for(var j=0;j<out.length;j++){
-      var seg = out[j];
-      var isBlock = /^<(ul>|\/ul>|li>|div)/.test(seg);
-      if(j>0){ var prev = out[j-1]; var prevBlock = /^<(ul>|\/ul>|li>|div)/.test(prev); if(!isBlock && !prevBlock) html += '<br>'; }
-      html += seg;
-    }
-    return html;
-  }
-
-  function addMsg(role, text, imgUrl){
-    var body = document.getElementById('mvaai-body');
-    var empty = document.getElementById('mvaai-empty'); if(empty) empty.remove();
-    var div = document.createElement('div');
-    div.className = 'mvaai-msg ' + (role === 'user' ? 'mvaai-user' : 'mvaai-bot');
-    div.innerHTML = role === 'user' ? esc(text).replace(/\n/g,'<br>') : md(text);
-    if(imgUrl){ var im = document.createElement('img'); im.src = imgUrl; div.appendChild(im); }
-    body.appendChild(div);
-    body.scrollTop = body.scrollHeight;
-  }
-
-  // ---- printscreen ----
-  function setPending(dataUrl){
-    var m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-    if(!m) return;
-    pending = { dataUrl: dataUrl, mediaType: m[1], base64: m[2] };
-    var pv = document.getElementById('mvaai-preview');
-    pv.querySelector('img').src = dataUrl;
-    pv.classList.add('show');
-  }
-  window.mvaaiClearImg = function(){
-    pending = null;
-    var pv = document.getElementById('mvaai-preview'); if(pv) pv.classList.remove('show');
-  };
-  function resizeImage(dataUrl, cb){
-    var img = new Image();
-    img.onload = function(){
-      var max = 1400, w = img.width, h = img.height;
-      if(w > max){ h = Math.round(h * max / w); w = max; }
-      var c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      try { cb(c.toDataURL('image/jpeg', 0.85)); } catch(e){ cb(dataUrl); }
-    };
-    img.onerror = function(){ cb(dataUrl); };
-    img.src = dataUrl;
-  }
-  function handleFile(file){
-    if(!file || file.type.indexOf('image/') !== 0) return;
-    var r = new FileReader();
-    r.onload = function(){ resizeImage(r.result, setPending); };
-    r.readAsDataURL(file);
-  }
-  window.mvaaiPick = function(){ document.getElementById('mvaai-file').click(); };
-  window.mvaaiFileChange = function(e){ if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ''; };
-
-  function setBusy(b){
-    var s = document.getElementById('mvaai-send'); if(s) s.disabled = b;
-    var t = document.getElementById('mvaai-tdir'); if(t) t.disabled = b;
-  }
-  function mvaUser(){
-    var u = window.MVA_USER || {};
-    var el = document.getElementById('portalUserName');
-    var nm = u.naam || (el ? el.textContent : '') || 'Onbekend';
-    return { naam: nm, rol: u.rol || '' };
-  }
-
-  // ---- versturen naar Claude ----
-  window.mvaaiSend = async function(){
-    if(busy) return;
-    var input = document.getElementById('mvaai-input');
-    var text = input.value.trim();
-    if(!text && !pending) return;
-
-    var imgUrl = pending ? pending.dataUrl : null;
-    var userContent;
-    if(pending){
-      userContent = [];
-      if(text) userContent.push({ type:'text', text:text });
-      userContent.push({ type:'image', source:{ type:'base64', media_type:pending.mediaType, data:pending.base64 } });
-      lastImage = pending.dataUrl;
-    } else { userContent = text; }
-
-    addMsg('user', text || '\uD83D\uDCCE printscreen', imgUrl);
-    apiHistory.push({ role:'user', content:userContent });
-    transcript.push({ role:'user', content: text + (imgUrl ? ' [printscreen meegestuurd]' : '') });
-    input.value = ''; window.mvaaiClearImg();
-
-    busy = true; setBusy(true);
-    var body = document.getElementById('mvaai-body');
-    var typing = document.createElement('div'); typing.className = 'mvaai-typing'; typing.textContent = 'Claude denkt na...';
-    body.appendChild(typing); body.scrollTop = body.scrollHeight;
-
-    try{
-      var res = await fetch('/.netlify/functions/claude', {
-        method:'POST', headers:{ 'content-type':'application/json' },
-        body: JSON.stringify({ messages: apiHistory, system: SYSTEM, max_tokens: 1024 })
-      });
-      var data = await res.json(); typing.remove();
-      if(!res.ok){ addMsg('bot', 'Er ging iets mis (' + res.status + '). ' + (data.error||'')); }
-      else { var a = data.text || '(leeg antwoord)'; addMsg('bot', a); apiHistory.push({ role:'assistant', content:a }); transcript.push({ role:'assistant', content:a }); }
-    } catch(e){ typing.remove(); addMsg('bot', 'Netwerkfout: ' + e.message); }
-    finally { busy = false; setBusy(false); input.focus(); }
-  };
-
-  // ---- versturen naar directie ----
-  window.mvaaiToDirectie = async function(){
-    if(busy) return;
-    var screenshot = pending ? pending.dataUrl : lastImage;
-    var userMsgs = transcript.filter(function(t){ return t.role === 'user'; });
-    var bericht = userMsgs.length ? userMsgs[userMsgs.length-1].content : '';
-    if(!bericht && !screenshot){ addMsg('bot', 'Typ eerst je wens of voeg een printscreen toe voordat je doorstuurt.'); return; }
-    if(!bericht) bericht = '(wens ingestuurd met alleen een printscreen)';
-
-    var u = mvaUser();
-    busy = true; setBusy(true);
-    var btn = document.getElementById('mvaai-tdir'); var old = btn.textContent; btn.textContent = 'Versturen...';
-    try{
-      var res = await fetch('/.netlify/functions/feedback', {
-        method:'POST', headers:{ 'content-type':'application/json' },
-        body: JSON.stringify({ naam:u.naam, rol:u.rol, bericht:bericht, gesprek:transcript, screenshot:screenshot })
-      });
-      var data = await res.json();
-      if(res.ok && data.saved){
-        addMsg('bot', '\u2713 Bedankt! Je wens is doorgestuurd naar de directie' + (data.mailed ? ' en per mail verzonden' : '') + '.');
-        window.mvaaiClearImg();
-      } else { addMsg('bot', 'Doorsturen mislukt (' + res.status + '). ' + (data.error||'')); }
-    } catch(e){ addMsg('bot', 'Doorsturen mislukt: ' + e.message); }
-    finally { busy = false; setBusy(false); btn.textContent = old; }
-  };
-
-  // printscreen plakken in het invoerveld
-  var inp = document.getElementById('mvaai-input');
-  if(inp){
-    inp.addEventListener('paste', function(e){
-      var items = (e.clipboardData || {}).items || [];
-      for(var i=0;i<items.length;i++){
-        if(items[i].type.indexOf('image/') === 0){ handleFile(items[i].getAsFile()); e.preventDefault(); }
-      }
-    });
-  }
-})();
-</script>
-<!-- ===== einde MvA-assistent ===== -->
 </body>
 </html>
