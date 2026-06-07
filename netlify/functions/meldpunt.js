@@ -32,6 +32,7 @@ Jouw taak is verzamelen en scherp krijgen — NIET zelf oplossen. Je past zelf n
 
 Werkwijze:
 - Schrijf in het Nederlands, warm en beknopt. Stel hooguit ÉÉN vraag per bericht.
+- De gebruiker kan screenshots of documenten meesturen. Je ziet die zelf niet, maar als er in een bericht "[Bijlage toegevoegd: ...]" staat, bevestig dat dan kort ("Top, ik heb je screenshot erbij") en gebruik het als signaal dat de melding compleet genoeg wordt.
 - Bepaal of het gaat om een BUG (iets werkt niet zoals het hoort), een TIP/idee (een verbetering), of een VRAAG.
 - Bij een BUG vraag je gericht door tot je dit helder hebt: welke app/welk scherm, wat deed de gebruiker, wat ging er mis, wat verwachtte hij, sinds wanneer / hoe vaak. Schat daarna de prioriteit (laag/midden/hoog).
 - Bij een TIP vraag je door: welk probleem lost het op, voor wie, en hoe ziet de gebruiker het voor zich. Houd het kort.
@@ -65,10 +66,11 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Meldpunt is nog niet geconfigureerd (API-key ontbreekt).' }) };
   }
 
-  let messages;
+  let messages, bijlagenIn = [];
   try {
     const body = JSON.parse(event.body || '{}');
     messages = Array.isArray(body.messages) ? body.messages : [];
+    bijlagenIn = Array.isArray(body.bijlagen) ? body.bijlagen : [];
   } catch {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ongeldige aanvraag' }) };
   }
@@ -80,6 +82,16 @@ exports.handler = async (event) => {
   if (messages.length === 0) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Geen bericht ontvangen' }) };
   }
+
+  // Bijlagen saniteren: alleen veldjes die we kennen, maximaal 10.
+  const bijlagen = bijlagenIn
+    .filter((b) => b && typeof b.pad === 'string')
+    .slice(0, 10)
+    .map((b) => ({
+      naam: String(b.naam || 'bestand').slice(0, 120),
+      pad: String(b.pad).slice(0, 300),
+      type: String(b.type || '').slice(0, 80),
+    }));
 
   // ── Claude aanroepen ──
   let antwoord;
@@ -142,6 +154,7 @@ exports.handler = async (event) => {
       app: (melding.app || '').slice(0, 120),
       prioriteit,
       transcript: [...messages, { role: 'assistant', content: antwoord }],
+      bijlagen,
     };
     try {
       await sbInsert('meldingen', rij);
@@ -209,6 +222,20 @@ async function sbInsert(tabel, rij) {
 async function mailNaarTon(rij) {
   const labels = { bug: '🐛 Bug', tip: '💡 Tip', vraag: '❓ Vraag', anders: 'Melding' };
   const onderwerp = `[Meldpunt] ${labels[rij.type] || 'Melding'} — ${rij.titel || 'zonder titel'}`;
+
+  // Bijlagen: tijdelijke downloadlinks (30 dagen geldig).
+  let bijlagenHtml = '';
+  if (Array.isArray(rij.bijlagen) && rij.bijlagen.length) {
+    const items = [];
+    for (const b of rij.bijlagen) {
+      const url = await signedUrl(b.pad).catch(() => null);
+      items.push(url
+        ? `<li><a href="${url}" style="color:#1A2B5F">${escapeHtml(b.naam)}</a></li>`
+        : `<li>${escapeHtml(b.naam)} (link niet beschikbaar)</li>`);
+    }
+    bijlagenHtml = `<p style="color:#444"><b>Bijlagen:</b></p><ul style="margin-top:0">${items.join('')}</ul>`;
+  }
+
   const html = `
     <div style="font-family:Arial,sans-serif;color:#2A2A2A;max-width:560px">
       <h2 style="color:#1A2B5F;margin-bottom:4px">${labels[rij.type] || 'Melding'}</h2>
@@ -216,6 +243,7 @@ async function mailNaarTon(rij) {
       <p><b>${escapeHtml(rij.titel || '')}</b></p>
       <p>${escapeHtml(rij.samenvatting || '')}</p>
       ${rij.details ? `<p style="color:#444"><b>Details:</b><br>${escapeHtml(rij.details).replace(/\n/g, '<br>')}</p>` : ''}
+      ${bijlagenHtml}
       <hr style="border:none;border-top:1px solid #E7E3DB">
       <p style="font-size:12px;color:#9A9A9A">MvA Meldpunt · staat in de meldingen-tabel met status 'nieuw'.</p>
     </div>`;
@@ -229,4 +257,17 @@ async function mailNaarTon(rij) {
 
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Tijdelijke (30 dagen) downloadlink voor een bestand in de privé-bucket.
+async function signedUrl(pad) {
+  const segs = String(pad).split('/').map(encodeURIComponent).join('/');
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/meldpunt-bijlagen/${segs}`, {
+    method: 'POST',
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn: 60 * 60 * 24 * 30 }),
+  });
+  if (!r.ok) return null;
+  const d = await r.json();
+  return d && d.signedURL ? `${SUPABASE_URL}/storage/v1${d.signedURL}` : null;
 }
