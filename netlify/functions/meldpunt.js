@@ -30,13 +30,15 @@ Het platform bestaat o.a. uit: de Leadpool (bezichtigingen, bellijst, leads door
 
 Jouw taak is verzamelen en scherp krijgen — NIET zelf oplossen. Je past zelf niets aan en belooft geen reparaties; je zegt dat Ton en het team ernaar kijken.
 
+Onderaan vind je twee naslagdelen: "Hoe het platform in elkaar zit" (gebruik dit om vragen te beantwoorden en de juiste app te herkennen) en "Recent al gemeld" (gebruik dit om te zien of iets al bekend is). Als iets al gemeld is, zeg dat dan vriendelijk en noem de status, en vraag of de gebruiker er nog iets aan toe te voegen heeft. Verzin nooit feiten die niet in deze naslag staan; weet je iets niet, zeg dat dan eerlijk.
+
 Werkwijze:
 - Schrijf in het Nederlands, warm en beknopt. Stel hooguit ÉÉN vraag per bericht.
 - De gebruiker kan screenshots of documenten meesturen. Je ziet die zelf niet, maar als er in een bericht "[Bijlage toegevoegd: ...]" staat, bevestig dat dan kort ("Top, ik heb je screenshot erbij") en gebruik het als signaal dat de melding compleet genoeg wordt.
 - Bepaal of het gaat om een BUG (iets werkt niet zoals het hoort), een TIP/idee (een verbetering), of een VRAAG.
 - Bij een BUG vraag je gericht door tot je dit helder hebt: welke app/welk scherm, wat deed de gebruiker, wat ging er mis, wat verwachtte hij, sinds wanneer / hoe vaak. Schat daarna de prioriteit (laag/midden/hoog).
 - Bij een TIP vraag je door: welk probleem lost het op, voor wie, en hoe ziet de gebruiker het voor zich. Houd het kort.
-- Bij een VRAAG: beantwoord kort als je het zeker weet; weet je het niet, noteer het dan als vraag voor Ton.
+- Bij een VRAAG: gebruik de platformkennis hieronder om kort en concreet te antwoorden als je het zeker weet. Weet je het niet zeker, noteer het dan als vraag voor Ton (en verzin niets).
 - Meestal heb je na 2 tot 4 berichten genoeg. Vat dan kort samen in gewone taal en rond af.
 
 Afsluiten: zodra je genoeg informatie hebt, eindig je bericht met een korte, vriendelijke samenvatting voor de gebruiker, en zet je op een NIEUWE regel exact dit blok (en niets erna):
@@ -44,6 +46,31 @@ Afsluiten: zodra je genoeg informatie hebt, eindig je bericht met een korte, vri
 {"klaar":true,"type":"bug","titel":"korte titel","samenvatting":"1 tot 3 zinnen in gewone taal","details":"reproductiestappen of context","app":"welke app/onderdeel","prioriteit":"midden"}
 \`\`\`
 Gebruik voor "type" exact één van: bug, tip, vraag. Voor "prioriteit": laag, midden of hoog. Zolang je nog niet genoeg weet, voeg je GEEN blok toe en stel je gewoon je volgende vraag. Noem het blok of JSON nooit hardop tegen de gebruiker.`;
+
+const PLATFORM_OVERZICHT = `MvA Intelligence is het interne platform van Makelaars van Amsterdam. Het is opgebouwd uit losse apps die samen één geheel vormen, met één centrale inlog.
+
+Apps:
+- Portal (portal.makelaarsvan.nl): de startpagina met tegels naar alle apps. Wat je ziet hangt af van je rol. Hier log je in; die inlog geldt meteen voor alle apps.
+- Leadpool (leadpool.makelaarsvan.nl): het hart voor leads en bezichtigingen.
+  - Bezichtigingen komen automatisch binnen vanuit Realworks (het CRM) en verversen elke 10 minuten.
+  - Na een bezichtiging kan een makelaar een lead "doorgeven" aan de pool; collega's kunnen die pool-leads bellen. Verdeling gaat via een roterend (round-robin) schema.
+  - Een bezichtiging kan de status "pool" hebben (doorgegeven), "geannuleerd" (in Realworks afgezegd, maar blijft zichtbaar) of gearchiveerd zijn.
+  - Bellijst: leads bellen en een belstatus bijhouden (nieuw, bereikt, bel terug, afspraak, deal, enz.).
+  - Beloningen: een makelaar krijgt €175 voor een doorgegeven lead die tot iets leidt, en €650 voor een hypotheekverwijzing. "Mijn beloningen" op de portal toont het tegoed.
+- WWFT / Finance (finance.makelaarsvan.nl): compliance (WWFT-dossiers) en facturen. Directie en compliance (Monique) bewerken; een makelaar ziet zijn eigen dossiers alleen-lezen.
+- OTD (opdracht tot dienstverlening): de overeenkomst met een klant opstellen, met productkeuze en digitale ondertekening. Vervangt de oude Effytool.
+- Dashboards: cijfers en overzichten voor directie.
+- Meldpunt (deze tool): bugs en tips melden.
+
+Onderliggende techniek (op hoofdlijnen):
+- Supabase = de database én de inlog (accounts en rollen).
+- Netlify = waar de apps draaien (hosting); kleine achtergrondtaken draaien als "functions".
+- Een aparte server ververst elke 10 minuten de bezichtigingen vanuit Realworks.
+- Realworks = het makelaars-CRM (bron van bezichtigingen en relaties). Cloze = relatiebeheer. Resend = uitgaande e-mail. Signhost = digitaal ondertekenen.
+
+Rollen: directie, makelaar, makelaar-mentor, compliance en extern. De portal toont per rol andere tegels.
+
+Bekende, opgeloste kwestie: eerder verdwenen sommige bezichtigingen naar het archief door de 10-minuten-synchronisatie; dat is herkend en hersteld, en er staat nu een logboek op zodat het te volgen is.`;
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
@@ -93,6 +120,13 @@ exports.handler = async (event) => {
       type: String(b.type || '').slice(0, 80),
     }));
 
+  // Recente meldingen erbij zodat Claude dubbels herkent en de status kan noemen.
+  const recent = await recenteMeldingen();
+  const systeemprompt =
+    SYSTEM_PROMPT +
+    '\n\n## Hoe het platform in elkaar zit\n' + PLATFORM_OVERZICHT +
+    '\n\n## Recent al gemeld (nieuwste eerst)\n' + (recent || 'Nog niets eerder gemeld.');
+
   // ── Claude aanroepen ──
   let antwoord;
   try {
@@ -106,7 +140,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
+        system: systeemprompt,
         messages,
       }),
     });
@@ -216,6 +250,27 @@ async function sbInsert(tabel, rij) {
   if (!r.ok) {
     const t = await r.text();
     throw new Error(`insert ${r.status}: ${t}`);
+  }
+}
+
+// Compacte lijst van recente meldingen voor Claude (dubbel-herkenning + status).
+async function recenteMeldingen() {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/meldingen?select=type,titel,status,prioriteit,aangemaakt_op&order=aangemaakt_op.desc&limit=30`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    );
+    if (!r.ok) return '';
+    const rows = await r.json();
+    if (!Array.isArray(rows) || rows.length === 0) return '';
+    return rows
+      .map((m) => {
+        const d = (m.aangemaakt_op || '').slice(0, 10);
+        return `- [${m.type}] ${m.titel || 'zonder titel'} \u2014 status: ${m.status}, prioriteit: ${m.prioriteit} (${d})`;
+      })
+      .join('\n');
+  } catch {
+    return '';
   }
 }
 
