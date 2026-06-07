@@ -40,6 +40,16 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
 #send{flex-shrink:0;width:44px;height:44px;border:none;border-radius:12px;background:#E8500A;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
 #send:hover{background:#cf4708}
 #send:disabled{background:#D8D3C9;cursor:default}
+#clip{flex-shrink:0;width:44px;height:44px;border:1.5px solid #E2DFD8;border-radius:12px;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+#clip:hover{border-color:#1A2B5F}
+#clip:disabled{opacity:.5;cursor:default}
+.chips{max-width:760px;margin:0 auto .55rem;display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #E2DFD8;border-radius:8px;padding:.3rem .55rem;font-size:12px;color:#2A2A2A;max-width:220px}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .x{cursor:pointer;color:#B0ACA2;font-weight:600;flex-shrink:0}
+.chip .x:hover{color:#E8500A}
+.chip.bezig{opacity:.6}
+.msg .bijlage{display:block;margin-top:.4rem;font-size:12px;opacity:.85}
 .hint{max-width:760px;margin:.45rem auto 0;font-size:11px;color:#B0ACA2;text-align:center}
 .newbtn{align-self:center;margin-top:.2rem;font-size:13px;color:#1A2B5F;background:none;border:1px solid #D8D3C9;border-radius:8px;padding:.45rem .9rem;cursor:pointer;font-family:inherit}
 .newbtn:hover{background:#fff}
@@ -68,11 +78,14 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
 </div>
 
 <div class="composer">
+  <div id="chips" class="chips"></div>
   <div class="composer-inner">
+    <button id="clip" title="Screenshot of document toevoegen">&#128206;</button>
     <textarea id="inp" rows="1" placeholder="Typ hier wat je tegenkwam of welk idee je hebt&hellip;"></textarea>
     <button id="send" title="Versturen">&#10148;</button>
   </div>
-  <div class="hint">Claude lost niet zelf op, maar legt je melding scherp vast en zet 'm door.</div>
+  <input id="file" type="file" accept="image/*,application/pdf" multiple style="display:none">
+  <div class="hint">Claude lost niet zelf op, maar legt je melding scherp vast en zet 'm door. Je kunt screenshots of documenten meesturen.</div>
 </div>
 
 <div id="gate" style="display:none">
@@ -90,11 +103,18 @@ const FN = '/.netlify/functions/meldpunt';
 const chat = document.getElementById('chat');
 const inp  = document.getElementById('inp');
 const send = document.getElementById('send');
+const clip = document.getElementById('clip');
+const fileInput = document.getElementById('file');
+const chipsEl = document.getElementById('chips');
 
 let token = null;
+let authUuid = null;
 let messages = [];          // echte beurten (user/assistant) voor de API
+let bijlagen = [];          // [{naam, pad, type, gemeld}]
 let bezig = false;
 let afgerond = false;
+const BUCKET = 'meldpunt-bijlagen';
+const MAX_MB = 10;
 
 // ── Sessie ophalen via gedeelde SSO-cookie ──
 let sb;
@@ -106,6 +126,7 @@ try {
   const { data } = await sb.auth.getSession();
   if (data && data.session && data.session.access_token) {
     token = data.session.access_token;
+    authUuid = data.session.user && data.session.user.id;
   }
 } catch (e) {
   console.error('SSO init faalde:', e);
@@ -138,23 +159,90 @@ function autosize(){ inp.style.height='auto'; inp.style.height=Math.min(inp.scro
 inp.addEventListener('input', autosize);
 inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); verstuur(); } });
 send.addEventListener('click', verstuur);
+clip.addEventListener('click', ()=>{ if(!afgerond) fileInput.click(); });
+fileInput.addEventListener('change', async ()=>{
+  const files = Array.from(fileInput.files || []);
+  fileInput.value = '';
+  for(const f of files){ await uploadFile(f); }
+});
+
+// ── Bijlagen ──
+function veiligeNaam(n){ return n.replace(/[^\w.\-]+/g,'_').slice(0,80); }
+
+async function uploadFile(file){
+  if(!authUuid || !sb) return;
+  if(file.size > MAX_MB*1024*1024){
+    bubble('bot', 'Dat bestand is te groot (max '+MAX_MB+' MB). Probeer een kleinere of bijgesneden versie.');
+    return;
+  }
+  const naam = file.name || 'bestand';
+  const pad = authUuid + '/' + Date.now() + '_' + veiligeNaam(naam);
+  const item = { naam, pad, type: file.type || '', gemeld:false, bezig:true };
+  bijlagen.push(item);
+  renderChips();
+  try{
+    const { error } = await sb.storage.from(BUCKET).upload(pad, file, { contentType: file.type || undefined, upsert:false });
+    if(error) throw error;
+    item.bezig = false;
+  }catch(e){
+    console.error('upload mislukt', e);
+    bijlagen = bijlagen.filter(b=>b!==item);
+    bubble('bot', 'Het uploaden van "'+naam+'" lukte niet. Probeer het nog eens.');
+  }
+  renderChips();
+}
+
+function renderChips(){
+  chipsEl.innerHTML = '';
+  bijlagen.forEach((b)=>{
+    const c = document.createElement('div');
+    c.className = 'chip' + (b.bezig ? ' bezig' : '');
+    const ic = (b.type && b.type.indexOf('pdf')>=0) ? '\u{1F4C4}' : '\u{1F5BC}\uFE0F';
+    const naamEl = document.createElement('span');
+    naamEl.textContent = (b.bezig ? '\u2026 ' : ic+' ') + b.naam;
+    c.appendChild(naamEl);
+    if(!b.bezig){
+      const x = document.createElement('span');
+      x.className = 'x'; x.textContent = '\u00D7'; x.title = 'Verwijderen';
+      x.onclick = ()=>{ bijlagen = bijlagen.filter(o=>o!==b); renderChips(); };
+      c.appendChild(x);
+    }
+    chipsEl.appendChild(c);
+  });
+}
 
 // ── Versturen ──
 async function verstuur(){
   if(bezig || afgerond) return;
   const tekst = inp.value.trim();
-  if(!tekst) return;
+  const klaarBijlagen = bijlagen.filter(b=>!b.bezig);
+  const nieuwe = klaarBijlagen.filter(b=>!b.gemeld);
+  if(!tekst && nieuwe.length===0) return;
   inp.value=''; autosize();
-  bubble('me', tekst);
-  messages.push({ role:'user', content: tekst });
 
-  bezig = true; send.disabled = true;
+  const mij = bubble('me', tekst || '(bijlage meegestuurd)');
+  if(nieuwe.length){
+    const sub = document.createElement('span');
+    sub.className = 'bijlage';
+    sub.textContent = '\u{1F4CE} ' + nieuwe.map(b=>b.naam).join(', ');
+    mij.appendChild(sub);
+  }
+
+  let content = tekst;
+  if(nieuwe.length){
+    const lijst = nieuwe.map(b=>b.naam).join(', ');
+    content = (tekst ? tekst + '\n\n' : '') + '[Bijlage toegevoegd: ' + lijst + ']';
+    nieuwe.forEach(b=>b.gemeld = true);
+  }
+  messages.push({ role:'user', content });
+
+  bezig = true; send.disabled = true; clip.disabled = true;
   const t = typing();
   try {
     const res = await fetch(FN, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
-      body: JSON.stringify({ messages })
+      body: JSON.stringify({ messages, bijlagen: klaarBijlagen.map(b=>({ naam:b.naam, pad:b.pad, type:b.type })) })
     });
     t.remove();
     const data = await res.json().catch(()=>({}));
@@ -177,6 +265,7 @@ async function verstuur(){
   } finally {
     bezig = false;
     send.disabled = afgerond;
+    clip.disabled = afgerond;
     if(!afgerond) inp.focus();
   }
 }
@@ -192,8 +281,8 @@ function toonNieuw(){
   b.className='newbtn';
   b.textContent='Nieuwe melding';
   b.onclick = ()=>{
-    messages=[]; afgerond=false; send.disabled=false;
-    chat.innerHTML='';
+    messages=[]; bijlagen=[]; afgerond=false; send.disabled=false; clip.disabled=false;
+    chat.innerHTML=''; renderChips();
     bubble('bot','Top \u2014 waar gaat de volgende melding over?');
     inp.focus();
   };
