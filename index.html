@@ -79,6 +79,20 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
     <button onclick="portalLogin()" style="width:100%;height:42px;background:#1A2B5F;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Inloggen</button>
     <div id="plErr" style="color:#E8500A;font-size:13px;margin-top:.75rem;text-align:center;min-height:18px"></div>
     <div style="text-align:center;margin-top:.4rem"><a href="#" id="plForgot" onclick="portalWachtwoordVergeten(event)" style="display:none;font-size:13px;color:#1A2B5F;text-decoration:underline;cursor:pointer">Wachtwoord vergeten?</a></div>
+    <button type="button" onclick="var p=document.getElementById('plAppHulp');var open=p.style.display!=='block';p.style.display=open?'block':'none';this.querySelector('span').textContent=open?'▲':'▼'" style="width:100%;margin-top:.9rem;background:#F6F4EF;border:1px solid #E2DFD8;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;color:#1A2B5F;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit">📲 Zet de app op je telefoon <span style="font-size:10px;color:#B0ACA2">▼</span></button>
+    <div id="plAppHulp" style="display:none;margin-top:.6rem;background:#F6F4EF;border:1px solid #E2DFD8;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#6B6760;line-height:1.55;text-align:left">
+      <div style="font-weight:600;color:#1A2B5F;margin-bottom:4px">📱 iPhone (Safari)</div>
+      <ol style="margin:0 0 .8rem;padding-left:1.1rem">
+        <li>Tik onderin op het <strong>deel-icoon</strong> (vierkantje met pijl omhoog).</li>
+        <li>Kies <strong>&quot;Zet op beginscherm&quot;</strong>.</li>
+        <li>Open de portal voortaan via dat icoon, niet via Safari.</li>
+      </ol>
+      <div style="font-weight:600;color:#1A2B5F;margin-bottom:4px">🤖 Android (Chrome)</div>
+      <ol style="margin:0;padding-left:1.1rem">
+        <li>Tik rechtsboven op de <strong>drie puntjes</strong>.</li>
+        <li>Kies <strong>&quot;App installeren&quot;</strong> of <strong>&quot;Toevoegen aan startscherm&quot;</strong>.</li>
+      </ol>
+    </div>
   </div>
 </div>
 <header>
