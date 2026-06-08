@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hoe wij het platform bouwen · MvA Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#1A2B5F; --orange:#E8500A; --cream:#F6F4EF;
+    --ink:#2A2A2A; --muted:#6B6760; --line:#E2DFD8;
+  }
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{
+    font-family:'DM Sans','DejaVu Sans',sans-serif;
+    color:var(--ink); background:var(--cream);
+    line-height:1.6; padding:16mm;
+  }
+  .doc{max-width:760px;margin:0 auto}
+
+  .topbar{display:flex;justify-content:flex-end;margin-bottom:14px}
+  .back{font-size:13px;color:var(--navy);text-decoration:none;border:1px solid var(--line);
+        padding:.4rem .8rem;border-radius:8px;background:#fff}
+
+  .head{background:var(--navy);border-radius:16px;padding:30px 34px;color:#fff;margin-bottom:26px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .mark{width:34px;height:34px;background:var(--orange);border-radius:8px;display:flex;
+        align-items:center;justify-content:center;font-family:'DM Serif Display','DejaVu Serif',serif;font-size:18px}
+  .brand-name{font-size:13px;font-weight:600;line-height:1.1}
+  .brand-sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.09em;text-transform:uppercase}
+  h1{font-family:'DM Serif Display','DejaVu Serif',serif;font-weight:400;font-size:30px;line-height:1.15;margin-bottom:8px}
+  .lead{font-size:14px;color:rgba(255,255,255,.78)}
+
+  p{font-size:14.5px;margin-bottom:16px}
+  .intro{color:var(--ink)}
+
+  .cards{display:flex;gap:16px;margin:6px 0 22px;flex-wrap:wrap}
+  .card{flex:1 1 300px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .card h2{font-family:'DM Sans','DejaVu Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;
+          text-transform:uppercase;color:var(--orange);margin-bottom:4px}
+  .card .who{font-family:'DM Serif Display','DejaVu Serif',serif;font-size:19px;color:var(--navy);margin-bottom:10px}
+  .card p{font-size:13.5px;color:var(--ink);margin-bottom:10px}
+  .dep{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-bottom:0}
+  .dep b{color:var(--navy)}
+
+  .box{background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy);
+       border-radius:12px;padding:18px 22px;margin-bottom:18px}
+  .box.cta{border-left-color:var(--orange);background:#FFF6F1}
+  .box h3{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin-bottom:8px}
+  .box.cta h3{color:var(--orange)}
+  .box p{font-size:14px;margin-bottom:0}
+
+  .foot{margin-top:26px;border-top:1px solid var(--line);padding-top:12px;
+        font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+
+  @page{size:A4;margin:0}
+  @media print{ .noprint{display:none!important} body{padding:15mm} }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="topbar noprint">
+    <a class="back" href="https://portal.makelaarsvan.nl/">&larr; Terug naar portal</a>
+  </div>
+
+  <div class="head">
+    <div class="brand">
+      <div class="mark">M</div>
+      <div><div class="brand-name">Makelaars van Amsterdam</div><div class="brand-sub">MvA Intelligence</div></div>
+    </div>
+    <h1>Hoe wij het platform bouwen</h1>
+    <div class="lead">Twee manieren, allebei met fouten &mdash; en waarom jouw meldingen goud waard zijn.</div>
+  </div>
+
+  <p class="intro">Software bouwen gaat altijd met vallen en opstaan. Of een mens het programmeert of een AI: er sluipen fouten in. Dat hoort er nu eenmaal bij. Het verschil zit hem niet in <em>of</em> er fouten komen, maar in waar je van afhankelijk bent om ze op te lossen.</p>
+
+  <div class="cards">
+    <div class="card">
+      <h2>De vertrouwde manier</h2>
+      <div class="who">Mensen programmeren</div>
+      <p>Zoals bij Effytool. Werkt iets niet, dan pakt een ontwikkelaar het op, plant het in, bouwt en rolt het uit.</p>
+      <p class="dep">Je bent afhankelijk van <b>programmeercapaciteit</b> &mdash; hoeveel handen er zijn, hun tijd en hun tarief. Prima vakmensen, maar wel een flessenhals.</p>
+    </div>
+    <div class="card">
+      <h2>Onze nieuwe manier</h2>
+      <div class="who">Claude programmeert</div>
+      <p>Claude (AI) doet het programmeerwerk. Ton houdt de regie en bepaalt samen met jullie de richting.</p>
+      <p class="dep">Je bent afhankelijk van de <b>intelligentie van de AI</b> in plaats van mensuren. Het voordeel: een fout herstellen of iets aanpassen kan vaak nog dezelfde dag.</p>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>Het eerlijke punt</h3>
+    <p>Omdat het zo snel en op maat gebouwd wordt, heeft zelfs Ton niet altijd zicht op elk detail onder de motorkap. Hij ziet wat het platform d&oacute;&eacute;t, niet elke regel die eronder zit. Dat maakt testen soms lastig &mdash; en precies daarom zijn jullie als testers onmisbaar.</p>
+  </div>
+
+  <div class="box cta">
+    <h3>Wat we van je vragen</h3>
+    <p>Kom je een bug, een foutje of iets geks tegen, of heb je een idee? Meld het meteen via het <b>Meldpunt</b>. Geen &ldquo;het zal wel goed komen&rdquo; of &ldquo;ik wil niet zeuren&rdquo; &mdash; juist die kleine dingen helpen enorm. Een fout is geen probleem, maar waardevolle informatie: hoe sneller wij het horen, hoe sneller we het fixen.</p>
+  </div>
+
+  <div class="foot">
+    <span>MvA Intelligence &middot; intern platform</span>
+    <span>Makelaars van Amsterdam</span>
+  </div>
+
+</div>
+</body>
+</html>
