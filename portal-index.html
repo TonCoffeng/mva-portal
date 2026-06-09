@@ -184,6 +184,8 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
         <div class="mavd-badge" id="mavd-badge">Nu</div>
       </div>
       <div class="mavd-next" id="mavd-next"></div>
+      <button id="ld-hist-btn" type="button" style="margin-top:.6rem;background:none;border:none;color:#1A2B5F;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:0">Toon historie &#9662;</button>
+      <div id="ld-hist" style="display:none;margin-top:.5rem;border-top:1px solid #E2DFD8;padding-top:.5rem;max-height:240px;overflow:auto"></div>
     </div>
     <div class="mavd-widget">
       <div class="mavd-top">
@@ -322,6 +324,32 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
     return null;
   }
   var DAGEN=['zo','ma','di','wo','do','vr','za'];
+  var MND=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  function slotStartVan(dt){var x=new Date(dt);x.setMinutes(0,0,0);x.setHours(Math.floor(x.getHours()/4)*4);return x;}
+  function bouwLdHistorie(){
+    var box=document.getElementById('ld-hist'); if(!box) return;
+    var start=slotStartVan(new Date());
+    var html=''; var huidigeDag='';
+    for(var k=1;k<=42;k++){
+      var t=new Date(start.getTime()-k*14400000);
+      var dagKey=t.getDate()+'-'+t.getMonth();
+      if(dagKey!==huidigeDag){
+        huidigeDag=dagKey;
+        html+='<div style="font-size:11px;font-weight:700;color:#1A2B5F;margin:.5rem 0 .25rem">'+DAGEN[t.getDay()]+' '+t.getDate()+' '+MND[t.getMonth()]+'</div>';
+      }
+      html+='<div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6760;padding:2px 0"><span>'+slotStr(t)+'</span><span style="color:#1A2B5F;font-weight:600">'+ROTA[ldIdx(t)]+'</span></div>';
+    }
+    box.innerHTML=html;
+  }
+  (function(){
+    var btn=document.getElementById('ld-hist-btn'), box=document.getElementById('ld-hist');
+    if(btn&&box){ btn.addEventListener('click',function(){
+      var open=box.style.display==='none';
+      if(open&&!box.dataset.geladen){ bouwLdHistorie(); box.dataset.geladen='1'; }
+      box.style.display=open?'block':'none';
+      btn.innerHTML=open?'Verberg historie &#9652;':'Toon historie &#9662;';
+    }); }
+  })();
 
   function update(){
     var now=new Date();
