@@ -118,9 +118,36 @@ window.addEventListener("load", function() {
   document.getElementById("loginBtn").addEventListener("click", doLogin);
   document.getElementById("logoutBtn").addEventListener("click", doLogout);
   document.getElementById("pw").addEventListener("keydown", function(e) { if(e.key === "Enter") doLogin(); });
+  if (location.hostname.endsWith('makelaarsvan.nl')) { ssoLogin(); return; }
   var saved = localStorage.getItem("mva_onderhoud_user");
   if (saved) { try { onLoginSuccess(JSON.parse(saved)); } catch(e) {} }
 });
+
+async function ssoLogin(){
+  try {
+    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+    const AUTH = createBrowserClient('https://olfcrzusdkijxroxvsgm.supabase.co','sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4',{
+      cookieOptions:{ domain:'.makelaarsvan.nl', path:'/', sameSite:'lax', secure:true, maxAge:60*60*24*30 }
+    });
+    const r = await AUTH.auth.getSession();
+    const session = r.data && r.data.session;
+    if(!session || !session.user){ naarPortal('Log in via het portal om Onderhoud te openen.'); return; }
+    const q = await AUTH.from('gebruikers').select('naam, rol, actief').eq('auth_uuid', session.user.id).maybeSingle();
+    const g = q.data;
+    if(!g || g.actief===false){ naarPortal('Geen actief account gevonden.'); return; }
+    if(g.rol !== 'directie'){ naarPortal('Alleen directie heeft toegang tot Onderhoud.'); return; }
+    onLoginSuccess({ name: g.naam || (session.user.email||''), email: (session.user.email||'').toLowerCase(), level: 'directie' });
+  } catch(e){ console.warn('SSO mislukt:', e); naarPortal('Inlogservice tijdelijk niet bereikbaar. Probeer het zo opnieuw.'); }
+}
+function naarPortal(msg){
+  var lw = document.getElementById('loginWrap');
+  if(!lw) return;
+  lw.style.display = 'flex';
+  lw.innerHTML = '<div class="login-card"><h2>Onderhoud</h2>'
+    + '<p style="font-size:14px;color:#6b6760;margin-bottom:16px">' + (msg||'') + '</p>'
+    + '<a href="https://portal.makelaarsvan.nl" style="display:block;text-align:center;background:#1a2b5f;color:#fff;text-decoration:none;padding:12px;border-radius:6px;font-weight:700">&rarr; Naar het portal</a>'
+    + '</div>';
+}
 function doLogin() {
   var email = document.getElementById("email").value.trim().toLowerCase();
   var pw = document.getElementById("pw").value;
