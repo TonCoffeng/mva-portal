@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MvA Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F6F4EF;min-height:100vh}
+header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:38px;height:38px;background:#E8500A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:20px;color:#fff}
+.logo-text{color:#fff}
+.logo-name{font-size:15px;font-weight:600;line-height:1.2}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase}
+.header-right{font-size:12px;color:rgba(255,255,255,.5)}
+.hero{background:#1A2B5F;padding:2.5rem 2rem 3rem;text-align:center}
+.hero h1{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;font-weight:400;margin-bottom:.5rem}
+.hero p{font-size:14px;color:rgba(255,255,255,.6);max-width:480px;margin:0 auto}
+.main{max-width:1100px;margin:-1.5rem auto 0;padding:0 2rem 4rem;position:relative;z-index:1}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#B0ACA2;margin-bottom:1rem;margin-top:2.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:#fff;border-radius:14px;border:1px solid #E2DFD8;overflow:hidden;text-decoration:none;display:block;transition:transform .15s,box-shadow .15s;animation:up .3s ease both}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(26,43,95,.12)}
+.card-top{padding:1.4rem 1.4rem 1rem;display:flex;align-items:flex-start;gap:14px}
+.card-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
+.ic-blue{background:#E6F1FB}.ic-orange{background:#FAEEDA}.ic-green{background:#EAF3DE}.ic-purple{background:#EEEDFE}
+.card-title{font-size:16px;font-weight:600;color:#1A2B5F;margin-bottom:4px;line-height:1.2}
+.card-desc{font-size:13px;color:#6B6760;line-height:1.55}
+.card-footer{padding:.8rem 1.4rem;border-top:1px solid #F0EEE9;display:flex;align-items:center;justify-content:space-between}
+.card-tag{font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px}
+.tag-live{background:#EAF3DE;color:#27500A}
+.tag-binnenkort{background:#F0EEE9;color:#B0ACA2}
+.card-arrow{width:28px;height:28px;border-radius:6px;background:#F0EEE9;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.card:hover .card-arrow{background:#E8500A}
+.card:hover .card-arrow svg path{stroke:#fff}
+.card-disabled{opacity:.25;pointer-events:none;filter:grayscale(100%)}
+.card-directie{border:2px solid #E8500A}
+.card-directie .card-title{color:#E8500A}
+.mavd-widget{background:#fff;border-radius:14px;border:1px solid #E2DFD8;padding:1.25rem 1.4rem;animation:up .3s ease both;animation-delay:200ms}
+.mavd-top{display:flex;align-items:center;gap:12px;margin-bottom:.75rem}
+.mavd-icon{width:40px;height:40px;border-radius:8px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.mavd-title{font-size:14px;font-weight:600;color:#1A2B5F}
+.mavd-sub{font-size:12px;color:#6B6760}
+.mavd-body{background:#F6F4EF;border-radius:10px;padding:.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.mavd-name{font-size:18px;font-weight:600;color:#1A2B5F}
+.mavd-slot{font-size:12px;color:#6B6760;margin-top:2px}
+.mavd-badge{font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px;background:#EAF3DE;color:#27500A;white-space:nowrap}
+.mavd-next{font-size:12px;color:#B0ACA2;margin-top:.6rem}
+.footer{text-align:center;padding:2rem;font-size:12px;color:#B0ACA2}
+.footer b{color:#1A2B5F}
+.rg-hide{display:none!important}
+</style>
+<meta name="theme-color" content="#1A2B5F">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MvA Intelligence">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+</head>
+<body>
+<div id="portalLogin" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1A2B5F;position:fixed;inset:0;z-index:999">
+  <div style="background:#fff;border-radius:12px;padding:2rem;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">
+      <div style="width:36px;height:36px;background:#E8500A;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-family:serif">M</div>
+      <div><div style="font-size:15px;font-weight:600;color:#1A2B5F">MvA Intelligence</div><div style="font-size:11px;color:#B0ACA2;text-transform:uppercase;letter-spacing:.06em">Makelaars Van Amsterdam</div></div>
+    </div>
+    <label style="font-size:12px;font-weight:600;color:#6B6760;display:block;margin-bottom:4px">E-mailadres</label>
+    <input id="plEmail" type="email" placeholder="naam@makelaarsvan.nl" style="width:100%;height:40px;border:1.5px solid #E2DFD8;border-radius:8px;padding:0 12px;font-size:14px;margin-bottom:1rem;outline:none;font-family:inherit" onfocus="this.style.borderColor='#1A2B5F'" onblur="this.style.borderColor='#E2DFD8'">
+    <label style="font-size:12px;font-weight:600;color:#6B6760;display:block;margin-bottom:4px">Wachtwoord</label>
+    <div style="position:relative;margin-bottom:1.25rem">
+      <input id="plPwd" type="password" placeholder="Wachtwoord" style="width:100%;height:40px;border:1.5px solid #E2DFD8;border-radius:8px;padding:0 40px 0 12px;font-size:14px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')portalLogin()" onfocus="this.style.borderColor='#1A2B5F'" onblur="this.style.borderColor='#E2DFD8'">
+      <button type="button" onclick="var f=document.getElementById('plPwd');f.type=f.type==='password'?'text':'password';this.innerHTML=f.type==='password'?'&#128065;':'&#128064;'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;opacity:.5">&#128065;</button>
+    </div>
+    <button onclick="portalLogin()" style="width:100%;height:42px;background:#1A2B5F;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Inloggen</button>
+    <div id="plErr" style="color:#E8500A;font-size:13px;margin-top:.75rem;text-align:center;min-height:18px"></div>
+    <div style="text-align:center;margin-top:.4rem"><a href="#" id="plForgot" onclick="portalWachtwoordVergeten(event)" style="display:none;font-size:13px;color:#1A2B5F;text-decoration:underline;cursor:pointer">Wachtwoord vergeten?</a></div>
+    <button type="button" onclick="var p=document.getElementById('plAppHulp');var open=p.style.display!=='block';p.style.display=open?'block':'none';this.querySelector('span').textContent=open?'▲':'▼'" style="width:100%;margin-top:.9rem;background:#F6F4EF;border:1px solid #E2DFD8;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;color:#1A2B5F;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit">📲 Zet de app op je telefoon <span style="font-size:10px;color:#B0ACA2">▼</span></button>
+    <div id="plAppHulp" style="display:none;margin-top:.6rem;background:#F6F4EF;border:1px solid #E2DFD8;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#6B6760;line-height:1.55;text-align:left">
+      <div style="font-weight:600;color:#1A2B5F;margin-bottom:4px">📱 iPhone (Safari)</div>
+      <ol style="margin:0 0 .8rem;padding-left:1.1rem">
+        <li>Tik onderin op het <strong>deel-icoon</strong> (vierkantje met pijl omhoog).</li>
+        <li>Kies <strong>&quot;Zet op beginscherm&quot;</strong>.</li>
+        <li>Open de portal voortaan via dat icoon, niet via Safari.</li>
+      </ol>
+      <div style="font-weight:600;color:#1A2B5F;margin-bottom:4px">🤖 Android (Chrome)</div>
+      <ol style="margin:0;padding-left:1.1rem">
+        <li>Tik rechtsboven op de <strong>drie puntjes</strong>.</li>
+        <li>Kies <strong>&quot;App installeren&quot;</strong> of <strong>&quot;Toevoegen aan startscherm&quot;</strong>.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+<header>
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    <div class="logo-text">
+      <div class="logo-name">MvA Intelligence</div>
+      <div class="logo-sub">Makelaars Van Amsterdam</div>
+    </div>
+  </div>
+  <div class="header-right" style="display:flex;align-items:center;gap:12px"><select id="rolePreview" onchange="previewRol(this.value)" title="Alleen directie: bekijk de portal als een andere rol" style="display:none;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:#1A2B5F;color:#fff;font-size:12px;font-family:inherit;padding:0 8px;cursor:pointer"><option value="directie">Bekijk als: directie</option><option value="makelaar">Bekijk als: makelaar</option><option value="makelaar-mentor">Bekijk als: mentor</option><option value="extern">Bekijk als: extern</option><option value="compliance">Bekijk als: compliance</option></select><span id="portalUserName" style="display:none;font-size:13px;color:rgba(255,255,255,.7)"></span><button id="portalLogoutBtn" onclick="portalLogout()" style="display:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;cursor:pointer">Uitloggen</button><span style="font-size:12px;color:rgba(255,255,255,.4)">Versie 3.0</span></div>
+</header>
+<div class="hero">
+  <h1>MvA Intelligence</h1>
+  <p>Het centrale platform van Makelaars Van Amsterdam. Selecteer een module om te starten.</p>
+</div>
+<div class="main">
+
+  <div class="section-title">Actieve modules</div>
+  <div class="grid">
+
+    <a href="https://kennisbank.makelaarsvan.nl" class="card" data-roles="directie,extern" style="animation-delay:0ms">
+      <div class="card-top">
+        <div class="card-icon ic-blue">&#129302;</div>
+        <div><div class="card-title">Q&amp;A Kennisbank</div><div class="card-desc">Stel vragen over MVA-processen, leveranciers, Ninja Selling en alle modules. Twee lagen: makelaars en directie.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="https://mva-documenten.netlify.app" class="card" data-roles="directie" style="animation-delay:60ms">
+      <div class="card-top">
+        <div class="card-icon ic-orange">&#128101;</div>
+        <div><div class="card-title">Leveranciers</div><div class="card-desc">Alle 56 actieve partners en leveranciers. Met contactgegevens, onboarding instructies en contractinformatie.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="https://leadpool.makelaarsvan.nl" class="card" data-roles="directie,makelaar,makelaar-mentor" style="animation-delay:120ms">
+      <div class="card-top">
+        <div class="card-icon ic-green">&#127968;</div>
+        <div><div class="card-title">MVA Leadpool</div><div class="card-desc">Lead-sharing systeem. Geef leads door na bezichtigingen en bel leads van collega-makelaars op via de pool.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="https://otd-mva.netlify.app" class="card" data-roles="directie" data-users="7" style="animation-delay:170ms">
+      <div class="card-top">
+        <div class="card-icon ic-orange">&#128221;</div>
+        <div><div class="card-title">Opdracht tot dienstverlening</div><div class="card-desc">Stel een verkoop-OTD op, bied 'm aan de klant aan en laat 'm digitaal ondertekenen. Met courtagemodellen, voorwaarden en automatisch archief.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="https://intranet.makelaars-in-amsterdam.nl" target="_blank" class="card" data-roles="directie,makelaar,makelaar-mentor" style="animation-delay:180ms">
+      <div class="card-top">
+        <div class="card-icon ic-blue">&#127760;</div>
+        <div><div class="card-title">Intranet MVA</div><div class="card-desc">Leaddistributie schema, telefoonnotitie, postcodes per makelaar en instructies.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="/mijn-beloningen.html" class="card" data-roles="directie,makelaar,makelaar-mentor" style="animation-delay:200ms">
+      <div class="card-top">
+        <div class="card-icon ic-green">&#128176;</div>
+        <div><div class="card-title">Mijn beloningen</div><div class="card-desc">Jouw vergoedingen voor doorgegeven leads (&euro;175) en hypotheekverwijzingen (&euro;650), met je totale tegoed en de status per beloning.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="/meldpunt.html" class="card" style="animation-delay:240ms">
+      <div class="card-top">
+        <div class="card-icon ic-orange">&#128172;</div>
+        <div><div class="card-title">Meldpunt</div><div class="card-desc">Iets kapot of een idee voor het platform? Spar met Claude &mdash; bugs en tips worden meteen netjes vastgelegd en doorgezet naar Ton.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-live">Live</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+  </div>
+
+  <div class="section-title" data-roles="directie,makelaar,makelaar-mentor">Live info</div>
+  <div data-roles="directie,makelaar,makelaar-mentor" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="mavd-widget">
+      <div class="mavd-top">
+        <div class="mavd-icon">&#128200;</div>
+        <div><div class="mavd-title">Leaddistributie &mdash; Nu aan de beurt</div><div class="mavd-sub">Roterend schema, wisselt elke 4 uur</div></div>
+      </div>
+      <div class="mavd-body">
+        <div><div class="mavd-name" id="mavd-name">Laden...</div><div class="mavd-slot" id="mavd-slot"></div></div>
+        <div class="mavd-badge" id="mavd-badge">Nu</div>
+      </div>
+      <div class="mavd-next" id="mavd-next"></div>
+    </div>
+    <div class="mavd-widget">
+      <div class="mavd-top">
+        <div class="mavd-icon" style="background:#FAEEDA">&#128205;</div>
+        <div><div class="mavd-title">Makelaar van Dienst</div><div class="mavd-sub">09:00&ndash;13:00 en 13:00&ndash;17:00</div></div>
+      </div>
+      <div class="mavd-body">
+        <div><div class="mavd-name" id="mavd2-name">Laden...</div><div class="mavd-slot" id="mavd2-slot"></div></div>
+        <div class="mavd-badge" id="mavd2-badge" style="background:#FAEEDA;color:#633806">Dienst</div>
+      </div>
+      <div class="mavd-next" id="mavd2-next"></div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:2rem">&nbsp;</div>
+  <a href="https://kennisbank.makelaarsvan.nl/admin.html" class="card card-directie" data-roles="directie" style="animation-delay:240ms">
+    <div class="card-top">
+      <div class="card-icon" style="background:#FCEBEB">&#9881;&#65039;</div>
+      <div><div class="card-title">Gebruikersbeheer</div><div class="card-desc">Directie: gebruikers toevoegen, activeren en verwijderen. Wachtwoorden beheren voor alle modules.</div></div>
+    </div>
+    <div class="card-footer"><span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+  </a>
+      <a href="/onderhoud.html" class="card card-directie" data-roles="directie">
+        <div class="card-top">
+          <div class="card-icon">🔧</div>
+          <div>
+            <div class="card-title">Onderhoud</div>
+            <div class="card-desc">Directie: applicaties beheren, wijzigingen starten via Claude prompts en changelog bijhouden per app.</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Directie</span>
+          <div class="card-arrow"></div>
+        </div>
+      </a>
+
+      <a href="https://mva-platform-kosten.netlify.app" class="card card-directie" data-roles="directie">
+        <div class="card-top">
+          <div class="card-icon" style="background:#FCEBEB">&#128176;</div>
+          <div>
+            <div class="card-title">Platform Kosten</div>
+            <div class="card-desc">Directie: overzicht van de maandelijkse platformkosten (Supabase, Netlify, DigitalOcean, CRM e.a.). Bewerkbaar, met totaal per maand en per jaar.</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span>
+          <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+
+      <a href="https://finance.makelaarsvan.nl" id="wwftCard" class="card card-directie" data-roles="directie,extern,compliance" data-users="7">
+        <div class="card-top">
+          <div class="card-icon" style="background:#FCEBEB">&#128737;&#65039;</div>
+          <div>
+            <div class="card-title">WWFT-controle</div>
+            <div class="card-desc">Controle van ID/WWFT op courtagenota's (eigen klant en wederpartij). Directie en compliance bewerken; makelaars zien hun eigen dossiers (alleen-lezen).</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag" id="wwftTag" style="background:#FCEBEB;color:#791F1F">Directie</span>
+          <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+
+      <a href="https://mva-finance.netlify.app/beloningen.html" class="card card-directie" data-roles="directie">
+        <div class="card-top">
+          <div class="card-icon" style="background:#FCEBEB">&#128176;</div>
+          <div>
+            <div class="card-title">Beloningen</div>
+            <div class="card-desc">Directie: &euro;175-verrekening voor de gevende makelaar bij een geslaagde doorgegeven lead uit de pool. Concept tot uitbetaling, met handmatige bevestiging.</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag" style="background:#FCEBEB;color:#791F1F">Directie</span>
+          <div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+
+  <div class="section-title" data-roles="directie">Binnenkort beschikbaar</div>
+  <div class="grid" data-roles="directie">
+
+    <a href="#" class="card card-disabled">
+      <div class="card-top">
+        <div class="card-icon ic-purple">&#127891;</div>
+        <div><div class="card-title">Opleidingsprogramma</div><div class="card-desc">Volledig leerpad Fase 1-7, 12 modules, Ninja Selling bibliotheek en werkflows voor aankoop en verkoop.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-binnenkort">Binnenkort</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="#" class="card card-disabled">
+      <div class="card-top">
+        <div class="card-icon ic-orange">&#128203;</div>
+        <div><div class="card-title">ACES Profielscan</div><div class="card-desc">Gedragsprofileringstool voor kandidaten. 28 woordparen, vier dimensies. Resultaten automatisch per e-mail.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-binnenkort">Binnenkort</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+    <a href="#" class="card card-disabled">
+      <div class="card-top">
+        <div class="card-icon ic-blue">&#128196;</div>
+        <div><div class="card-title">Documentbibliotheek</div><div class="card-desc">Contracten, recruitingdocumenten en organisatiestukken via SharePoint. Beschikbaar zodra Azure koppeling actief is.</div></div>
+      </div>
+      <div class="card-footer"><span class="card-tag tag-binnenkort">Binnenkort</span><div class="card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="#6B6760" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </a>
+
+  </div>
+</div>
+<div class="footer">
+  <b>MvA Intelligence</b> &middot; Makelaars Van Amsterdam &middot; 2026
+  <div style="margin:7px auto 0;max-width:540px;font-size:11px;color:#C4C0B7;line-height:1.55">
+    Dit platform bouwen we zelf, samen met AI. Fouten kunnen voorkomen &mdash; zie je iets, meld het dan even via het Meldpunt.
+    <a href="/uitleg-werkwijze.html" style="color:#9A968D;text-decoration:underline">Hoe we bouwen</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Leaddistributie - roterend 4-uurlijks schema
+  var ROTA=['Wilma Out','Anthonie Schilder','Mathias Elias','Maurits Rodermond','Rogier de Vries','Jan Jaap ten Arve','Maurits van Leeuwen','Pelle Freijsen','Jori Netiv'];
+  var ORIGIN=new Date('2026-04-15T00:00:00');
+  function ldIdx(now){var d=Math.floor((now-ORIGIN)/14400000);return((d%ROTA.length)+ROTA.length)%ROTA.length;}
+  function slotStr(now){var h=now.getHours();var s=Math.floor(h/4)*4;var e=s+4;return(s<10?'0':'')+s+':00 - '+(e<10?'0':'')+e+':00';}
+
+  // Makelaar van Dienst - rooster v2 (11 mei - 31 dec 2026)
+  var FEEST={'2026-05-14':'Hemelvaartsdag','2026-05-25':'Tweede Pinksterdag','2026-12-25':'Eerste Kerstdag'};
+  var MA_PM={
+    '2026-05-11':'Mathias Elias','2026-05-18':'Mathias Elias',
+    '2026-06-01':'Maurits van Leeuwen','2026-06-08':'Maurits Rodermond','2026-06-15':'Wilma Out','2026-06-22':'Rogier de Vries','2026-06-29':'Pelle Freijsen',
+    '2026-07-06':'Jan Jaap ten Arve','2026-07-13':'Anthonie Schilder','2026-07-20':'Jori Netiv','2026-07-27':'Mathias Elias',
+    '2026-08-03':'Maurits van Leeuwen','2026-08-10':'Maurits Rodermond','2026-08-17':'Wilma Out','2026-08-24':'Rogier de Vries','2026-08-31':'Pelle Freijsen',
+    '2026-09-07':'Jan Jaap ten Arve','2026-09-14':'Anthonie Schilder','2026-09-21':'Jori Netiv','2026-09-28':'Anthonie Schilder',
+    '2026-10-05':'Maurits van Leeuwen','2026-10-12':'Maurits Rodermond','2026-10-19':'Wilma Out','2026-10-26':'Rogier de Vries',
+    '2026-11-02':'Pelle Freijsen','2026-11-09':'Jan Jaap ten Arve','2026-11-16':'Pelle Freijsen','2026-11-23':'Jori Netiv','2026-11-30':'Jori Netiv',
+    '2026-12-07':'Maurits van Leeuwen','2026-12-14':'Maurits Rodermond','2026-12-21':'Wilma Out','2026-12-28':'Jan Jaap ten Arve'
+  };
+  function ymd(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
+  function dienstVoor(dt){
+    var k=ymd(dt),wd=dt.getDay();
+    if(FEEST[k])return null;
+    if(wd===1)return {o:'Anthonie Schilder',m:MA_PM[k]||null};
+    if(wd===2)return {o:'Pelle Freijsen',m:'Rogier de Vries'};
+    if(wd===3)return {o:'Jori Netiv',m:'Mathias Elias'};
+    if(wd===4)return {o:'Maurits van Leeuwen',m:'Jan Jaap ten Arve'};
+    if(wd===5)return {o:'Maurits Rodermond',m:'Wilma Out'};
+    return null;
+  }
+  function volgendeDienst(from){
+    var d=new Date(from);
+    for(var i=0;i<10;i++){d.setDate(d.getDate()+1);var dv=dienstVoor(d);if(dv)return {d:new Date(d),dv:dv};}
+    return null;
+  }
+  var DAGEN=['zo','ma','di','wo','do','vr','za'];
+
+  function update(){
+    var now=new Date();
+    var h=now.getHours();
+    var d=now.getDay();
+
+    // Leaddistributie
+    var i=ldIdx(now);
+    var ni=(i+1)%ROTA.length;
+    var nextH=(Math.floor(h/4)+1)*4;
+    var nextT=(nextH<10?'0':'')+nextH+':00';
+    document.getElementById('mavd-name').textContent=ROTA[i];
+    document.getElementById('mavd-slot').textContent='Slot: '+slotStr(now);
+    document.getElementById('mavd-badge').textContent='Aan de beurt';
+    document.getElementById('mavd-next').textContent='Daarna: '+ROTA[ni]+' vanaf '+nextT;
+
+    // Makelaar van Dienst
+    var n2=document.getElementById('mavd2-name');
+    var s2=document.getElementById('mavd2-slot');
+    var b2=document.getElementById('mavd2-badge');
+    var nx2=document.getElementById('mavd2-next');
+    if(!n2)return;
+    var feest=FEEST[ymd(now)];
+    var vandaag=dienstVoor(now);
+    if(vandaag){
+      var isOchtend=h<13;
+      var inDienst=h>=9&&h<17;
+      var current=isOchtend?vandaag.o:vandaag.m;
+      var slot=isOchtend?'09:00 - 13:00':'13:00 - 17:00';
+      n2.textContent=current||'Nog niet ingepland';
+      s2.textContent=inDienst?'Dienst: '+slot:'Buiten diensttijden';
+      b2.textContent=inDienst?'In dienst':'Vandaag';
+      b2.style.background=inDienst?'#EAF3DE':'#F0EEE9';
+      b2.style.color=inDienst?'#27500A':'#B0ACA2';
+      if(isOchtend&&vandaag.m){
+        nx2.textContent='Daarna: '+vandaag.m+' (13:00)';
+      } else {
+        var v=volgendeDienst(now);
+        nx2.textContent=v?('Daarna: '+v.dv.o+' ('+DAGEN[v.d.getDay()]+' 09:00)'):'';
+      }
+    } else {
+      n2.textContent=feest?feest:'Weekend';
+      s2.textContent='Geen dienst';
+      b2.textContent=feest?'Vrij':'Weekend';
+      b2.style.background='#F0EEE9';b2.style.color='#B0ACA2';
+      var v2=volgendeDienst(now);
+      nx2.textContent=v2?('Volgende: '+v2.dv.o+' ('+DAGEN[v2.d.getDay()]+' 09:00)'):'';
+    }
+  }
+  update();
+  setInterval(update,60000);
+})();
+</script>
+
+<script>
+// --- Centrale toegang MvA Intelligence ---
+// Op het eigen domein (*.makelaarsvan.nl) draait echte Supabase SSO via een
+// gedeelde cookie op .makelaarsvan.nl. Op *.netlify.app blijft de bestaande
+// hardcoded flow als vangnet staan (onzichtbaar bouwen tot de cut).
+window.MVA_SSO = location.hostname.endsWith('makelaarsvan.nl');
+
+function applyRoleGating(rol, userId){
+  document.querySelectorAll('[data-roles], [data-users]').forEach(function(el){
+    var show = false;
+    var roles = el.getAttribute('data-roles');
+    if(roles && roles.split(',').map(function(s){return s.trim();}).indexOf(rol) >= 0) show = true;
+    var users = el.getAttribute('data-users');
+    if(!show && users && userId != null && users.split(',').map(function(s){return s.trim();}).indexOf(String(userId)) >= 0) show = true;
+    if(show) el.classList.remove('rg-hide');
+    else el.classList.add('rg-hide');
+  });
+
+  // WWFT-tegel: label en rand per rol (directie/compliance = bewerken, makelaars = alleen-lezen)
+  var wwftTag = document.getElementById('wwftTag');
+  var wwftCard = document.getElementById('wwftCard');
+  if(wwftTag){
+    if(rol === 'directie' || rol === 'compliance'){
+      wwftTag.textContent = 'Directie';
+      wwftTag.style.background = '#FCEBEB';
+      wwftTag.style.color = '#791F1F';
+      if(wwftCard) wwftCard.classList.add('card-directie');
+    } else {
+      wwftTag.textContent = 'Alleen-lezen';
+      wwftTag.style.background = '#EFEDE8';
+      wwftTag.style.color = '#6B6760';
+      if(wwftCard) wwftCard.classList.remove('card-directie');
+    }
+  }
+}
+
+function previewRol(r){ applyRoleGating(r); }
+
+// Inline onclick blijft portalLogin()/portalLogout() aanroepen; deze routeren.
+function portalLogin(){
+  if(window.MVA_SSO){
+    if(window.__ssoLogin) window.__ssoLogin();
+    else document.getElementById('plErr').textContent='Even geduld, inlogservice laadt...';
+  } else { legacyLogin(); }
+}
+function portalLogout(){
+  if(window.MVA_SSO){ if(window.__ssoLogout) window.__ssoLogout(); }
+  else { legacyLogout(); }
+}
+function portalWachtwoordVergeten(e){
+  if(e&&e.preventDefault) e.preventDefault();
+  if(window.MVA_SSO){
+    if(window.__ssoReset) window.__ssoReset();
+    else document.getElementById('plErr').textContent='Even geduld, inlogservice laadt...';
+  } else {
+    document.getElementById('plErr').textContent='Wachtwoord resetten kan op portal.makelaarsvan.nl';
+  }
+}
+</script>
+
+<script>
+var PORTAL_USERS = {
+  'toncoffeng@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Ton Coffeng'},
+  'hanskoppes@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Hans Koppes'},
+  'roemerkoppes@makelaarsvan.nl': {pw:'Level2!', level:'directie', name:'Roemer Koppes'},
+  'moniqueklaver@makelaarsvan.nl': {pw:'MVA2026!', level:'makelaar', name:'Monique Klaver'},
+  'rogierdevries@makelaarsvan.nl': {pw:'MVA2026!', level:'makelaar', name:'Rogier de Vries'}
+};
+function legacyLogin(){
+  var em=document.getElementById('plEmail').value.trim().toLowerCase();
+  var pw=document.getElementById('plPwd').value;
+  var u=PORTAL_USERS[em];
+  if(!u||u.pw!==pw){document.getElementById('plErr').textContent='Ongeldige inloggegevens';return;}
+  sessionStorage.setItem('mva_portal_user', JSON.stringify({email:em,level:u.level,name:u.name}));
+  document.getElementById('portalLogin').style.display='none';
+  document.getElementById('portalLogoutBtn').style.display='inline-flex';
+  document.getElementById('portalUserName').textContent=u.name;
+  document.getElementById('portalUserName').style.display='inline';
+  applyRoleGating(u.level);
+  var rp=document.getElementById('rolePreview');
+  if(rp){ if(u.level==='directie'){ rp.value='directie'; rp.style.display='inline-block'; } else { rp.style.display='none'; } }
+}
+function legacyLogout(){
+  sessionStorage.removeItem('mva_portal_user');
+  document.getElementById('portalLogin').style.display='flex';
+  document.getElementById('portalLogoutBtn').style.display='none';
+  document.getElementById('portalUserName').style.display='none';
+  document.getElementById('plPwd').value='';
+  document.getElementById('plErr').textContent='';
+  var rp=document.getElementById('rolePreview'); if(rp) rp.style.display='none';
+}
+// Check sessie bij laden
+window.addEventListener('load', function(){
+  if(window.MVA_SSO) return; // SSO regelt dit in de module hieronder
+  var s=sessionStorage.getItem('mva_portal_user');
+  if(s){
+    var u=JSON.parse(s);
+    document.getElementById('portalLogin').style.display='none';
+    document.getElementById('portalLogoutBtn').style.display='inline-flex';
+    document.getElementById('portalUserName').textContent=u.name;
+    document.getElementById('portalUserName').style.display='inline';
+    applyRoleGating(u.level);
+    var rp=document.getElementById('rolePreview');
+    if(rp){ if(u.level==='directie'){ rp.value='directie'; rp.style.display='inline-block'; } else { rp.style.display='none'; } }
+  }
+});
+</script>
+
+<script type="module">
+if(window.MVA_SSO){
+  try{
+    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+    const SB_URL = 'https://olfcrzusdkijxroxvsgm.supabase.co';
+    const SB_KEY = 'sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
+    const sb = createBrowserClient(SB_URL, SB_KEY, {
+      cookieOptions: { domain: '.makelaarsvan.nl', path: '/', sameSite: 'lax', secure: true, maxAge: 60*60*24*30 }
+    });
+
+    async function profiel(user){
+      const { data, error } = await sb.from('gebruikers')
+        .select('id, naam, rol, actief').eq('auth_uuid', user.id).maybeSingle();
+      return { data, error };
+    }
+    function toonApp(p){
+      document.getElementById('portalLogin').style.display='none';
+      document.getElementById('portalLogoutBtn').style.display='inline-flex';
+      var nm=document.getElementById('portalUserName'); nm.textContent=p.naam||''; nm.style.display='inline';
+      applyRoleGating(p.rol, p.id);
+      var rp=document.getElementById('rolePreview');
+      if(rp){ if(p.rol==='directie'){ rp.value='directie'; rp.style.display='inline-block'; } else { rp.style.display='none'; } }
+    }
+
+    var fpEl=document.getElementById('plForgot'); if(fpEl) fpEl.style.display='inline';
+    window.__ssoReset = async function(){
+      const err=document.getElementById('plErr');
+      const em=document.getElementById('plEmail').value.trim().toLowerCase();
+      if(!em){ err.textContent='Vul eerst je e-mailadres in, dan sturen we een herstellink.'; return; }
+      err.textContent='Bezig met versturen...';
+      const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + '/wachtwoord.html' });
+      err.textContent = error ? 'Kon de herstelmail niet versturen. Probeer het zo opnieuw.' : 'Gelukt - check je mail voor de herstellink (ook je spam).';
+    };
+    window.__ssoLogin = async function(){
+      const err=document.getElementById('plErr'); err.textContent='';
+      const em=document.getElementById('plEmail').value.trim().toLowerCase();
+      const pw=document.getElementById('plPwd').value;
+      if(!em||!pw){ err.textContent='Vul e-mail en wachtwoord in'; return; }
+      err.textContent='Bezig met inloggen...';
+      const r1 = await sb.auth.signInWithPassword({ email:em, password:pw });
+      if(r1.error||!r1.data||!r1.data.user){ err.textContent='Ongeldige inloggegevens'; return; }
+      const r2 = await profiel(r1.data.user);
+      if(r2.error||!r2.data){ await sb.auth.signOut(); err.textContent='Geen profiel gevonden voor dit account'; return; }
+      if(r2.data.actief===false){ await sb.auth.signOut(); err.textContent='Dit account is niet actief'; return; }
+      err.textContent=''; toonApp(r2.data);
+    };
+    window.__ssoLogout = async function(){
+      await sb.auth.signOut();
+      document.getElementById('portalLogin').style.display='flex';
+      document.getElementById('portalLogoutBtn').style.display='none';
+      document.getElementById('portalUserName').style.display='none';
+      document.getElementById('plPwd').value='';
+      document.getElementById('plErr').textContent='';
+      var rp=document.getElementById('rolePreview'); if(rp) rp.style.display='none';
+    };
+
+    // Al ingelogd via de gedeelde sessie? Dan meteen door.
+    const cur = await sb.auth.getSession();
+    if(cur.data.session && cur.data.session.user){
+      const r = await profiel(cur.data.session.user);
+      if(r.data && r.data.actief!==false) toonApp(r.data);
+    }
+  } catch(e){
+    console.error('SSO init faalde:', e);
+    var el=document.getElementById('plErr');
+    if(el) el.textContent='Inlogservice tijdelijk niet bereikbaar. Probeer het zo opnieuw.';
+  }
+}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(e){ console.warn('SW registratie mislukt:', e); });
+  });
+}
+</script>
+</body>
+</html>
