@@ -39,6 +39,9 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 .bel-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.2rem}
 .bel-filter{font-family:inherit;font-size:14px;font-weight:600;color:#1A2B5F;background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:9px 14px;cursor:pointer;max-width:320px}
 .bel-filter:focus{outline:none;border-color:#1A2B5F}
+.bel-btn{margin-top:6px;font-family:inherit;font-size:12px;font-weight:600;border:none;border-radius:6px;padding:5px 10px;cursor:pointer}
+.bel-btn.uitbetalen{background:#15803d;color:#fff}
+.bel-btn.ongedaan{background:#f1f0ec;color:#6B6760}
 </style>
 </head>
 <body>
@@ -68,14 +71,14 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;'
 const TYPE_LABEL={'lead_175':'Doorgegeven lead','hypotheek_650':'Hypotheekverwijzing'};
 const STATUS_LABEL={'concept':'Nog niet uitbetaald','uitbetaald':'Uitbetaald'};
 function datumNL(x){ return x ? new Date(x).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}) : ''; }
-function rijHtml(r, metaExtra){
+function rijHtml(r, metaExtra, actieHtml){
   const b=Number(r.bedrag)||0;
   const tlabel=TYPE_LABEL[r.type]||r.type;
   const slabel=STATUS_LABEL[r.status]||r.status;
   const stag=r.status==='uitbetaald'?'tag-uitbetaald':'tag-concept';
   const meta=[].concat(metaExtra||[], [tlabel, r.klant_naam||'', datumNL(r.aangemaakt_op)]).filter(Boolean).map(esc).join(' &middot; ');
   return '<div class="rij"><div><div class="rij-adres">'+esc(r.adres||'Onbekend adres')+'</div><div class="rij-meta">'+meta+'</div></div>'+
-         '<div class="rij-rechts"><div class="rij-bedrag">'+euro.format(b)+'</div><span class="tag '+stag+'">'+esc(slabel)+'</span></div></div>';
+         '<div class="rij-rechts"><div class="rij-bedrag">'+euro.format(b)+'</div><span class="tag '+stag+'">'+esc(slabel)+'</span>'+(actieHtml||'')+'</div></div>';
 }
 function totaalBlok(label, sub, waarde, klein){
   return '<div class="totaal"><div><div class="totaal-label">'+label+'</div>'+(sub?'<div class="totaal-sub">'+sub+'</div>':'')+'</div><div class="totaal-bedrag"'+(klein?' style="font-size:24px"':'')+'>'+waarde+'</div></div>';
@@ -93,7 +96,7 @@ try{
     else if(prof.rol === 'directie'){
       document.getElementById('heroSub').textContent = 'Alle beloningen — filter op makelaar en product';
       const [belRes, gebrRes] = await Promise.all([
-        sb.from('beloningen').select('type, bedrag, status, adres, klant_naam, factuurnummer, aangemaakt_op, gevende_makelaar_id, gevende_makelaar').order('aangemaakt_op',{ascending:false}),
+        sb.from('beloningen').select('id, type, bedrag, status, adres, klant_naam, factuurnummer, aangemaakt_op, gevende_makelaar_id, gevende_makelaar').order('aangemaakt_op',{ascending:false}),
         sb.from('gebruikers').select('id, naam')
       ]);
       if(belRes.error){ melding('Kon de beloningen niet laden. Probeer het later opnieuw.'); }
@@ -115,6 +118,17 @@ try{
             '<div id="belTotalen"></div>'+
             '<div id="belLijst" class="lijst"></div>';
           const fMak=document.getElementById('fMakelaar'), fProd=document.getElementById('fProduct');
+          function actieBtn(r){
+            return r.status==='uitbetaald'
+              ? '<button class="bel-btn ongedaan" data-id="'+r.id+'" data-actie="concept">Terug naar concept</button>'
+              : '<button class="bel-btn uitbetalen" data-id="'+r.id+'" data-actie="uitbetaald">Markeer uitbetaald</button>';
+          }
+          async function updateStatus(id, nieuw){
+            const { error } = await sb.from('beloningen').update({ status:nieuw, bijgewerkt_op:new Date().toISOString() }).eq('id', id);
+            if(error){ alert('Bijwerken mislukt: '+error.message); return; }
+            const rr = alle.find(x=>x.id===id); if(rr) rr.status = nieuw;
+            renderDir();
+          }
           function renderDir(){
             const mk=fMak.value, pr=fProd.value;
             const base=alle.filter(r=> (mk==='alle'||makNaam(r)===mk) && (pr==='alle'||r.type===pr));
@@ -124,11 +138,18 @@ try{
               totaalBlok('Reeds uitbetaald','',euro.format(uit),true)+
               totaalBlok('Aantal beloningen',(mk==='alle'?'alle makelaars':esc(mk)),String(base.length),true);
             document.getElementById('belLijst').innerHTML = base.length
-              ? base.map(r=>rijHtml(r,[makNaam(r)])).join('')
+              ? base.map(r=>rijHtml(r,[makNaam(r)], actieBtn(r))).join('')
               : '<div class="leeg">Geen beloningen in deze selectie.</div>';
           }
           fMak.addEventListener('change', renderDir);
           fProd.addEventListener('change', renderDir);
+          document.getElementById('belLijst').addEventListener('click', function(ev){
+            const btn = ev.target.closest('button[data-actie]');
+            if(!btn) return;
+            const id = Number(btn.dataset.id), actie = btn.dataset.actie;
+            if(actie==='uitbetaald' && !confirm('Deze beloning als uitbetaald markeren?')) return;
+            updateStatus(id, actie);
+          });
           renderDir();
         }
       }
