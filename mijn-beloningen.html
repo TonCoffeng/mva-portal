@@ -36,6 +36,9 @@ header{background:#1A2B5F;padding:0 2rem;height:68px;display:flex;align-items:ce
 .melding{max-width:420px;margin:5rem auto;background:#fff;border-radius:12px;border:1px solid #E2DFD8;padding:2rem;text-align:center}
 .melding a{color:#E8500A;font-weight:600;text-decoration:none}
 .footer{text-align:center;padding:2rem;font-size:12px;color:#B0ACA2}
+.bel-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.2rem}
+.bel-filter{font-family:inherit;font-size:14px;font-weight:600;color:#1A2B5F;background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:9px 14px;cursor:pointer;max-width:320px}
+.bel-filter:focus{outline:none;border-color:#1A2B5F}
 </style>
 </head>
 <body>
@@ -61,22 +64,77 @@ const SB_KEY='sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
 const euro=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',minimumFractionDigits:0});
 const main=document.getElementById('main');
 function melding(html){ main.innerHTML='<div class="melding">'+html+'</div>'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const TYPE_LABEL={'lead_175':'Doorgegeven lead','hypotheek_650':'Hypotheekverwijzing'};
 const STATUS_LABEL={'concept':'Nog niet uitbetaald','uitbetaald':'Uitbetaald'};
+function datumNL(x){ return x ? new Date(x).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}) : ''; }
+function rijHtml(r, metaExtra){
+  const b=Number(r.bedrag)||0;
+  const tlabel=TYPE_LABEL[r.type]||r.type;
+  const slabel=STATUS_LABEL[r.status]||r.status;
+  const stag=r.status==='uitbetaald'?'tag-uitbetaald':'tag-concept';
+  const meta=[].concat(metaExtra||[], [tlabel, r.klant_naam||'', datumNL(r.aangemaakt_op)]).filter(Boolean).map(esc).join(' &middot; ');
+  return '<div class="rij"><div><div class="rij-adres">'+esc(r.adres||'Onbekend adres')+'</div><div class="rij-meta">'+meta+'</div></div>'+
+         '<div class="rij-rechts"><div class="rij-bedrag">'+euro.format(b)+'</div><span class="tag '+stag+'">'+esc(slabel)+'</span></div></div>';
+}
+function totaalBlok(label, sub, waarde, klein){
+  return '<div class="totaal"><div><div class="totaal-label">'+label+'</div>'+(sub?'<div class="totaal-sub">'+sub+'</div>':'')+'</div><div class="totaal-bedrag"'+(klein?' style="font-size:24px"':'')+'>'+waarde+'</div></div>';
+}
 
 try{
   const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-  const sb = createBrowserClient(SB_URL, SB_KEY, {
-    cookieOptions:{ domain:'.makelaarsvan.nl', path:'/', sameSite:'lax', secure:true, maxAge:60*60*24*30 }
-  });
+  const sb = createBrowserClient(SB_URL, SB_KEY, { cookieOptions:{ domain:'.makelaarsvan.nl', path:'/', sameSite:'lax', secure:true, maxAge:60*60*24*30 } });
   const { data:{ session } } = await sb.auth.getSession();
   if(!session || !session.user){
     melding('Log eerst in via de portal om je beloningen te zien.<br><br><a href="/">Naar de portal &rarr;</a>');
   } else {
     const { data:prof } = await sb.from('gebruikers').select('id, naam, rol').eq('auth_uuid', session.user.id).maybeSingle();
     if(!prof){ melding('Geen profiel gevonden voor dit account.'); }
+    else if(prof.rol === 'directie'){
+      document.getElementById('heroSub').textContent = 'Alle beloningen — filter op makelaar en product';
+      const [belRes, gebrRes] = await Promise.all([
+        sb.from('beloningen').select('type, bedrag, status, adres, klant_naam, factuurnummer, aangemaakt_op, gevende_makelaar_id, gevende_makelaar').order('aangemaakt_op',{ascending:false}),
+        sb.from('gebruikers').select('id, naam')
+      ]);
+      if(belRes.error){ melding('Kon de beloningen niet laden. Probeer het later opnieuw.'); }
+      else {
+        const idMap={}; (gebrRes.data||[]).forEach(g=>{ idMap[g.id]=g.naam; });
+        const makNaam = r => r.gevende_makelaar || idMap[r.gevende_makelaar_id] || ('Makelaar #'+r.gevende_makelaar_id);
+        const alle = belRes.data||[];
+        if(!alle.length){
+          main.innerHTML='<div class="leeg">Er zijn nog geen beloningen geregistreerd.</div>';
+        } else {
+          const makelaars = Array.from(new Set(alle.map(makNaam))).sort((x,y)=>x.localeCompare(y,'nl'));
+          const mkOpts = ['<option value="alle">Alle makelaars ('+alle.length+')</option>']
+            .concat(makelaars.map(m=>{ const n=alle.filter(r=>makNaam(r)===m).length; return '<option value="'+esc(m)+'">'+esc(m)+' ('+n+')</option>'; })).join('');
+          main.innerHTML =
+            '<div class="bel-filters">'+
+              '<select id="fMakelaar" class="bel-filter">'+mkOpts+'</select>'+
+              '<select id="fProduct" class="bel-filter"><option value="alle">Alle producten</option><option value="lead_175">Doorgegeven lead</option><option value="hypotheek_650">Hypotheekverwijzing</option></select>'+
+            '</div>'+
+            '<div id="belTotalen"></div>'+
+            '<div id="belLijst" class="lijst"></div>';
+          const fMak=document.getElementById('fMakelaar'), fProd=document.getElementById('fProduct');
+          function renderDir(){
+            const mk=fMak.value, pr=fProd.value;
+            const base=alle.filter(r=> (mk==='alle'||makNaam(r)===mk) && (pr==='alle'||r.type===pr));
+            let open=0, uit=0; base.forEach(r=>{ const b=Number(r.bedrag)||0; if(r.status==='uitbetaald') uit+=b; else open+=b; });
+            document.getElementById('belTotalen').innerHTML =
+              totaalBlok('Openstaand tegoed','nog niet uitbetaald',euro.format(open))+
+              totaalBlok('Reeds uitbetaald','',euro.format(uit),true)+
+              totaalBlok('Aantal beloningen',(mk==='alle'?'alle makelaars':esc(mk)),String(base.length),true);
+            document.getElementById('belLijst').innerHTML = base.length
+              ? base.map(r=>rijHtml(r,[makNaam(r)])).join('')
+              : '<div class="leeg">Geen beloningen in deze selectie.</div>';
+          }
+          fMak.addEventListener('change', renderDir);
+          fProd.addEventListener('change', renderDir);
+          renderDir();
+        }
+      }
+    }
     else {
-      document.getElementById('heroSub').textContent = prof.naam ? (prof.naam+' \u2014 je vergoedingen uit de pool') : 'Je vergoedingen uit de pool';
+      document.getElementById('heroSub').textContent = prof.naam ? (prof.naam+' — je vergoedingen uit de pool') : 'Je vergoedingen uit de pool';
       const { data:rows, error } = await sb.from('beloningen')
         .select('type, bedrag, status, adres, klant_naam, factuurnummer, aangemaakt_op')
         .eq('gevende_makelaar_id', prof.id)
@@ -87,21 +145,10 @@ try{
       } else {
         let openTotaal=0, uitTotaal=0;
         rows.forEach(r=>{ const b=Number(r.bedrag)||0; if(r.status==='uitbetaald') uitTotaal+=b; else openTotaal+=b; });
-        const rijenHtml = rows.map(r=>{
-          const b=Number(r.bedrag)||0;
-          const tlabel=TYPE_LABEL[r.type]||r.type;
-          const slabel=STATUS_LABEL[r.status]||r.status;
-          const stag=r.status==='uitbetaald'?'tag-uitbetaald':'tag-concept';
-          const datum=r.aangemaakt_op?new Date(r.aangemaakt_op).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):'';
-          const meta=[tlabel, r.klant_naam||'', datum].filter(Boolean).join(' &middot; ');
-          return '<div class="rij"><div><div class="rij-adres">'+(r.adres||'Onbekend adres')+'</div><div class="rij-meta">'+meta+'</div></div>'+
-                 '<div class="rij-rechts"><div class="rij-bedrag">'+euro.format(b)+'</div><span class="tag '+stag+'">'+slabel+'</span></div></div>';
-        }).join('');
         main.innerHTML =
-          '<div class="totaal"><div><div class="totaal-label">Openstaand tegoed</div><div class="totaal-sub">nog niet uitbetaald</div></div>'+
-          '<div class="totaal-bedrag">'+euro.format(openTotaal)+'</div></div>'+
-          (uitTotaal>0?'<div class="totaal"><div><div class="totaal-label">Reeds uitbetaald</div></div><div class="totaal-bedrag" style="font-size:24px">'+euro.format(uitTotaal)+'</div></div>':'')+
-          '<div class="lijst">'+rijenHtml+'</div>';
+          totaalBlok('Openstaand tegoed','nog niet uitbetaald',euro.format(openTotaal))+
+          (uitTotaal>0?totaalBlok('Reeds uitbetaald','',euro.format(uitTotaal),true):'')+
+          '<div class="lijst">'+rows.map(r=>rijHtml(r,null)).join('')+'</div>';
       }
     }
   }
