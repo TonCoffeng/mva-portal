@@ -514,8 +514,25 @@ window.addEventListener('load', function(){
 
 <script type="module">
 if(window.MVA_SSO){
+  const SSR_CDNS = [
+    'https://cdn.jsdelivr.net/npm/@supabase/ssr@0.5.2/+esm',
+    'https://esm.sh/@supabase/ssr@0.5.2',
+    'https://cdn.skypack.dev/@supabase/ssr@0.5.2'
+  ];
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+  async function laadSsr(){
+    let laatste;
+    for(const url of SSR_CDNS){
+      try{
+        const mod = await withTimeout(import(url), 8000);
+        if(mod && mod.createBrowserClient){ return mod.createBrowserClient; }
+        laatste = new Error('createBrowserClient ontbreekt in ' + url);
+      }catch(e){ laatste = e; console.warn('SSR-import faalde via', url, e); }
+    }
+    throw laatste || new Error('Geen inlog-CDN beschikbaar');
+  }
   try{
-    const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+    const createBrowserClient = await laadSsr();
     const SB_URL = 'https://olfcrzusdkijxroxvsgm.supabase.co';
     const SB_KEY = 'sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
     const sb = createBrowserClient(SB_URL, SB_KEY, {
@@ -575,9 +592,22 @@ if(window.MVA_SSO){
       if(r.data && r.data.actief!==false) toonApp(r.data);
     }
   } catch(e){
-    console.error('SSO init faalde:', e);
+    console.error('SSO init faalde, val terug op vangnet-login:', e);
+    // Vangnet: schakel echte SSO uit zodat de Inloggen-knop de ingebouwde login gebruikt.
+    window.MVA_SSO = false;
+    try{
+      var s=sessionStorage.getItem('mva_portal_user');
+      if(s){
+        var u=JSON.parse(s);
+        document.getElementById('portalLogin').style.display='none';
+        document.getElementById('portalLogoutBtn').style.display='inline-flex';
+        var nm=document.getElementById('portalUserName'); nm.textContent=u.name||''; nm.style.display='inline';
+        applyRoleGating(u.level);
+        var rp=document.getElementById('rolePreview'); if(rp && u.level==='directie'){ rp.value='directie'; rp.style.display='inline-block'; }
+      }
+    }catch(_e){}
     var el=document.getElementById('plErr');
-    if(el) el.textContent='Inlogservice tijdelijk niet bereikbaar. Probeer het zo opnieuw.';
+    if(el) el.textContent='Externe inlogservice reageert niet \u2014 log in met je e-mail en wachtwoord.';
   }
 }
 </script>
