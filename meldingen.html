@@ -221,9 +221,10 @@ function render(){
       ${bijl.length ? `<div class="bijlagen">📎 Bijlagen: ${bijl.map(b=>esc(b.naam)).join(', ')}</div>` : ''}
 
       <div class="notitie-rij">
-        <textarea id="${notId}" placeholder="Notitie / vervolgactie (zichtbaar voor directie)…">${esc(m.directie_notitie || '')}</textarea>
+        <textarea id="${notId}" placeholder="Notitie / terugkoppeling — bij 'Klaar' gaat dit naar de melder…">${esc(m.directie_notitie || '')}</textarea>
         <div class="notitie-acties">
           <button class="nbtn" onclick="bewaarNotitie(${m.id})">Notitie bewaren</button>
+          ${m.melder_gemaild_op ? `<span class="afgehandeld" style="color:#3A6310">✓ melder gemaild op ${datum(m.melder_gemaild_op)}</span>` : ''}
           ${m.afgehandeld_door ? `<span class="afgehandeld">laatst bijgewerkt door ${esc(m.afgehandeld_door)}</span>` : ''}
         </div>
       </div>
@@ -248,6 +249,7 @@ async function patch(id, body){
 }
 
 window.zetStatus = async (id, status) => {
+  if (status === 'klaar') return afronden(id);
   try {
     const bij = await patch(id, { status });
     const i = alle.findIndex(m=>m.id===id);
@@ -255,6 +257,27 @@ window.zetStatus = async (id, status) => {
     render();
     toast('Status: ' + (statusLabel[status]||status));
   } catch(e){ toast('Bijwerken mislukt'); }
+};
+
+window.afronden = async (id) => {
+  const m = alle.find(x=>x.id===id); if(!m) return;
+  const notEl = document.getElementById('not-'+id);
+  const notitie = notEl ? notEl.value.trim() : (m.directie_notitie || '');
+  let vraag = 'Melding op "Klaar" zetten?';
+  if (m.melder_gemaild_op) {
+    vraag += '\n\nDe melder is al eerder gemaild — er gaat geen nieuwe mail uit.';
+  } else {
+    vraag += '\n\nDe melder (' + (m.gebruiker_naam || 'onbekend') + ') krijgt automatisch deze terugkoppeling per mail:\n\n'
+           + (notitie ? '“' + notitie + '”' : '(geen notitie ingevuld — er gaat een algemene "opgelost"-mail uit)');
+  }
+  if (!confirm(vraag)) return;
+  try {
+    const bij = await patch(id, { status: 'klaar', directie_notitie: notitie });
+    const i = alle.findIndex(x=>x.id===id);
+    if(i>=0 && bij) alle[i] = { ...alle[i], ...bij };
+    render();
+    toast(bij && bij.melder_gemaild_op ? 'Afgerond — melder gemaild' : 'Afgerond');
+  } catch(e){ toast('Afronden mislukt'); }
 };
 
 window.bewaarNotitie = async (id) => {
