@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meldingen · MvA Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#1A2B5F">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#F6F4EF;min-height:100vh;color:#2A2A2A}
+  header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:34px;height:34px;background:#E8500A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+  .logo-name{font-size:14px;font-weight:600;color:#fff;line-height:1.1}
+  .logo-sub{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase}
+  .back{font-size:13px;color:rgba(255,255,255,.8);text-decoration:none;display:flex;align-items:center;gap:5px}
+
+  .wrap{max-width:880px;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+  .intro h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:26px;color:#1A2B5F}
+  .intro p{font-size:13px;color:#6B6760;margin-top:.3rem;line-height:1.55}
+
+  .filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:1.1rem 0 .4rem}
+  .filt{font-size:12px;font-family:inherit;border:1px solid #D8D3C9;background:#fff;color:#5A564E;border-radius:8px;padding:.4rem .7rem;cursor:pointer}
+  .filt.aan{background:#1A2B5F;border-color:#1A2B5F;color:#fff}
+  .telling{font-size:12px;color:#9A968D;margin:.3rem 0 1rem}
+
+  .kaart{background:#fff;border:1px solid #E7E3DB;border-radius:14px;padding:1rem 1.1rem;margin-bottom:.9rem;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+  .kaart.klaar,.kaart.afgewezen{opacity:.62}
+  .rij1{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-bottom:.5rem}
+  .badge{font-size:11px;font-weight:600;border-radius:6px;padding:.2rem .5rem;letter-spacing:.02em}
+  .b-bug{background:#FCEBEB;color:#9A1F1F}
+  .b-tip{background:#EAF3DE;color:#3A6310}
+  .b-vraag{background:#E6EEF7;color:#1A4E8A}
+  .b-anders{background:#F0EDE6;color:#6B6760}
+  .b-prio-hoog{background:#FBE3D5;color:#A8400A}
+  .b-prio-midden{background:#F4EFE2;color:#7A6A2E}
+  .b-prio-laag{background:#EDEDED;color:#777}
+  .meta{font-size:12px;color:#9A968D;margin-left:auto}
+  .titel{font-size:16px;font-weight:600;color:#1A2B5F;line-height:1.35;margin-bottom:.25rem}
+  .melder{font-size:12px;color:#6B6760;margin-bottom:.5rem}
+  .samenvatting{font-size:13.5px;line-height:1.55;color:#3A3833;white-space:pre-wrap}
+  .toggle-det{font-size:12px;color:#E8500A;background:none;border:none;cursor:pointer;font-family:inherit;padding:.3rem 0;margin-top:.2rem}
+  .details{font-size:13px;line-height:1.55;color:#4A463F;white-space:pre-wrap;background:#FAF8F3;border:1px solid #EDE8DE;border-radius:10px;padding:.7rem .85rem;margin-top:.4rem;display:none}
+  .bijlagen{font-size:12px;color:#6B6760;margin-top:.5rem}
+
+  .status-rij{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.8rem;padding-top:.8rem;border-top:1px solid #F0ECE3}
+  .sbtn{font-size:12px;font-family:inherit;border:1px solid #D8D3C9;background:#fff;color:#5A564E;border-radius:8px;padding:.4rem .7rem;cursor:pointer;transition:all .12s}
+  .sbtn:hover{border-color:#1A2B5F}
+  .sbtn.aan-nieuw{background:#1A2B5F;border-color:#1A2B5F;color:#fff}
+  .sbtn.aan-opgepakt{background:#B8860B;border-color:#B8860B;color:#fff}
+  .sbtn.aan-klaar{background:#3A6310;border-color:#3A6310;color:#fff}
+  .sbtn.aan-afgewezen{background:#9A1F1F;border-color:#9A1F1F;color:#fff}
+  .kopieer{margin-left:auto;background:#E8500A;border:none;color:#fff;font-weight:600}
+  .kopieer:hover{filter:brightness(.95)}
+
+  .notitie-rij{margin-top:.7rem}
+  .notitie-rij textarea{width:100%;border:1.5px solid #E2DFD8;border-radius:10px;padding:.55rem .7rem;font-size:13px;font-family:inherit;resize:vertical;min-height:46px;outline:none;background:#fff}
+  .notitie-rij textarea:focus{border-color:#1A2B5F}
+  .notitie-acties{display:flex;align-items:center;gap:.6rem;margin-top:.35rem}
+  .nbtn{font-size:12px;font-family:inherit;border:1px solid #D8D3C9;background:#fff;color:#5A564E;border-radius:8px;padding:.35rem .7rem;cursor:pointer}
+  .afgehandeld{font-size:11px;color:#9A968D}
+
+  .leeg{text-align:center;color:#9A968D;font-size:14px;padding:3rem 1rem}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1A2B5F;color:#fff;font-size:13px;padding:.65rem 1.1rem;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}
+  .toast.zien{opacity:1}
+
+  #gate{position:fixed;inset:0;background:#1A2B5F;display:none;align-items:center;justify-content:center;color:#fff;text-align:center;padding:2rem;z-index:50}
+  #gate a{color:#fff}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    <div><div class="logo-name">Meldingen</div><div class="logo-sub">MvA Intelligence</div></div>
+  </div>
+  <a class="back" href="https://portal.makelaarsvan.nl/">&larr; Terug naar portal</a>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Meldingen</h1>
+    <p>Alles wat via het Meldpunt binnenkomt — bugs, tips en vragen. Zet de status, noteer een vervolgactie, of kopieer een melding in &eacute;&eacute;n klik door naar Claude om te laten oppakken.</p>
+  </div>
+
+  <div class="filters" id="statusFilters">
+    <button class="filt aan" data-status="open">Open</button>
+    <button class="filt" data-status="alles">Alles</button>
+    <button class="filt" data-status="nieuw">Nieuw</button>
+    <button class="filt" data-status="opgepakt">Opgepakt</button>
+    <button class="filt" data-status="klaar">Klaar</button>
+    <button class="filt" data-status="afgewezen">Afgewezen</button>
+  </div>
+  <div class="filters" id="typeFilters">
+    <button class="filt aan" data-type="alles">Alle types</button>
+    <button class="filt" data-type="bug">Bugs</button>
+    <button class="filt" data-type="tip">Tips</button>
+    <button class="filt" data-type="vraag">Vragen</button>
+  </div>
+  <div class="telling" id="telling"></div>
+
+  <div id="lijst"><div class="leeg">Laden&hellip;</div></div>
+</div>
+
+<div id="gate">
+  <div>
+    <p style="font-size:16px;margin-bottom:.6rem" id="gateTitel">Je bent niet ingelogd.</p>
+    <p style="font-size:14px;opacity:.8" id="gateTekst">Open dit overzicht via <a href="https://portal.makelaarsvan.nl/">portal.makelaarsvan.nl</a> en log eerst in.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+const SB_URL = 'https://olfcrzusdkijxroxvsgm.supabase.co';
+const SB_KEY = 'sb_publishable_0OmJOAM_XZWCW8e_vgx2Qg_L3tdRsc4';
+const FN = '/.netlify/functions/meldingen-beheer';
+
+const lijstEl = document.getElementById('lijst');
+const tellingEl = document.getElementById('telling');
+const gate = document.getElementById('gate');
+const toastEl = document.getElementById('toast');
+
+let token = null;
+let alle = [];
+let filterStatus = 'open';
+let filterType = 'alles';
+
+const typeLabel = { bug:'Bug', tip:'Tip', vraag:'Vraag', anders:'Melding' };
+const statusLabel = { nieuw:'Nieuw', opgepakt:'Opgepakt', klaar:'Klaar', afgewezen:'Afgewezen' };
+
+// ── Sessie via gedeelde SSO-cookie ──
+let sb;
+try {
+  const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
+  sb = createBrowserClient(SB_URL, SB_KEY, {
+    cookieOptions: { domain: '.makelaarsvan.nl', path: '/', sameSite: 'lax', secure: true, maxAge: 60*60*24*30 }
+  });
+  const { data } = await sb.auth.getSession();
+  if (data && data.session && data.session.access_token) token = data.session.access_token;
+} catch (e) { /* val terug op gate */ }
+
+if (!token) { toonGate(); }
+else { await laad(); }
+
+function toonGate(titel, tekst){
+  if (titel) document.getElementById('gateTitel').textContent = titel;
+  if (tekst) document.getElementById('gateTekst').innerHTML = tekst;
+  gate.style.display = 'flex';
+}
+
+async function laad(){
+  try {
+    const res = await fetch(FN, { headers: { Authorization: 'Bearer ' + token } });
+    if (res.status === 403) { toonGate('Alleen voor directie', 'Dit overzicht is afgeschermd voor de directie.'); return; }
+    if (res.status === 401) { toonGate(); return; }
+    const data = await res.json();
+    alle = Array.isArray(data.meldingen) ? data.meldingen : [];
+    render();
+  } catch (e) {
+    lijstEl.innerHTML = '<div class="leeg">Kon de meldingen niet laden. Ververs de pagina.</div>';
+  }
+}
+
+// ── Filters ──
+document.getElementById('statusFilters').addEventListener('click', e => {
+  const b = e.target.closest('[data-status]'); if(!b) return;
+  filterStatus = b.dataset.status;
+  for (const el of document.querySelectorAll('#statusFilters .filt')) el.classList.toggle('aan', el===b);
+  render();
+});
+document.getElementById('typeFilters').addEventListener('click', e => {
+  const b = e.target.closest('[data-type]'); if(!b) return;
+  filterType = b.dataset.type;
+  for (const el of document.querySelectorAll('#typeFilters .filt')) el.classList.toggle('aan', el===b);
+  render();
+});
+
+function gefilterd(){
+  return alle.filter(m => {
+    const sOk = filterStatus==='alles' ? true
+              : filterStatus==='open'  ? (m.status==='nieuw' || m.status==='opgepakt')
+              : m.status===filterStatus;
+    const tOk = filterType==='alles' ? true : (m.type||'anders')===filterType;
+    return sOk && tOk;
+  });
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function datum(s){ if(!s) return ''; const d=new Date(s); return d.toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}); }
+
+function render(){
+  const items = gefilterd();
+  const open = alle.filter(m=>m.status==='nieuw'||m.status==='opgepakt').length;
+  tellingEl.textContent = `${items.length} getoond · ${open} open · ${alle.length} totaal`;
+  if (items.length === 0) { lijstEl.innerHTML = '<div class="leeg">Geen meldingen in deze weergave.</div>'; return; }
+
+  lijstEl.innerHTML = items.map(m => {
+    const t = m.type || 'anders';
+    const prio = m.prioriteit || 'midden';
+    const bijl = Array.isArray(m.bijlagen) ? m.bijlagen : [];
+    const detId = 'det-' + m.id;
+    const notId = 'not-' + m.id;
+    const statusKnoppen = ['nieuw','opgepakt','klaar','afgewezen'].map(s =>
+      `<button class="sbtn ${m.status===s?('aan-'+s):''}" onclick="zetStatus(${m.id},'${s}')">${statusLabel[s]}</button>`
+    ).join('');
+    return `
+    <div class="kaart ${esc(m.status)}" id="kaart-${m.id}">
+      <div class="rij1">
+        <span class="badge b-${t}">${typeLabel[t]||'Melding'}</span>
+        <span class="badge b-prio-${esc(prio)}">prioriteit ${esc(prio)}</span>
+        ${m.app ? `<span class="badge b-anders">${esc(m.app)}</span>` : ''}
+        <span class="meta">#${m.id} · ${datum(m.aangemaakt_op)}</span>
+      </div>
+      <div class="titel">${esc(m.titel || 'Zonder titel')}</div>
+      <div class="melder">Gemeld door ${esc(m.gebruiker_naam || 'onbekend')}</div>
+      ${m.samenvatting ? `<div class="samenvatting">${esc(m.samenvatting)}</div>` : ''}
+      ${m.details ? `<button class="toggle-det" onclick="document.getElementById('${detId}').style.display=(document.getElementById('${detId}').style.display==='block'?'none':'block')">Details tonen/verbergen</button><div class="details" id="${detId}">${esc(m.details)}</div>` : ''}
+      ${bijl.length ? `<div class="bijlagen">📎 Bijlagen: ${bijl.map(b=>esc(b.naam)).join(', ')}</div>` : ''}
+
+      <div class="notitie-rij">
+        <textarea id="${notId}" placeholder="Notitie / vervolgactie (zichtbaar voor directie)…">${esc(m.directie_notitie || '')}</textarea>
+        <div class="notitie-acties">
+          <button class="nbtn" onclick="bewaarNotitie(${m.id})">Notitie bewaren</button>
+          ${m.afgehandeld_door ? `<span class="afgehandeld">laatst bijgewerkt door ${esc(m.afgehandeld_door)}</span>` : ''}
+        </div>
+      </div>
+
+      <div class="status-rij">
+        ${statusKnoppen}
+        <button class="sbtn kopieer" onclick="kopieer(${m.id})">📋 Kopieer voor Claude</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function patch(id, body){
+  const res = await fetch(FN, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token },
+    body: JSON.stringify({ actie:'bijwerken', id, ...body })
+  });
+  if(!res.ok){ const d=await res.json().catch(()=>({})); throw new Error(d.error||'mislukt'); }
+  const d = await res.json();
+  return d.melding;
+}
+
+window.zetStatus = async (id, status) => {
+  try {
+    const bij = await patch(id, { status });
+    const i = alle.findIndex(m=>m.id===id);
+    if(i>=0 && bij) alle[i] = { ...alle[i], ...bij };
+    render();
+    toast('Status: ' + (statusLabel[status]||status));
+  } catch(e){ toast('Bijwerken mislukt'); }
+};
+
+window.bewaarNotitie = async (id) => {
+  const el = document.getElementById('not-'+id);
+  if(!el) return;
+  try {
+    const bij = await patch(id, { directie_notitie: el.value });
+    const i = alle.findIndex(m=>m.id===id);
+    if(i>=0 && bij) alle[i] = { ...alle[i], ...bij };
+    toast('Notitie bewaard');
+  } catch(e){ toast('Opslaan mislukt'); }
+};
+
+window.kopieer = async (id) => {
+  const m = alle.find(x=>x.id===id); if(!m) return;
+  const bijl = Array.isArray(m.bijlagen) ? m.bijlagen : [];
+  const tekst =
+`Melding #${m.id} uit het MvA Meldpunt
+Type: ${m.type||'anders'} · Prioriteit: ${m.prioriteit||'midden'} · App: ${m.app||'onbekend'}
+Gemeld door: ${m.gebruiker_naam||'onbekend'} op ${datum(m.aangemaakt_op)}
+Status: ${m.status}
+
+Titel: ${m.titel||'-'}
+
+Samenvatting:
+${m.samenvatting||'-'}
+
+Details:
+${m.details||'-'}
+
+Bijlagen: ${bijl.length ? bijl.map(b=>b.naam).join(', ') : 'geen'}${m.directie_notitie ? `\n\nNotitie directie:\n${m.directie_notitie}` : ''}`;
+  try {
+    await navigator.clipboard.writeText(tekst);
+    toast('Gekopieerd — plak in de Claude-chat');
+  } catch(e){
+    // Fallback voor browsers zonder clipboard-API
+    const ta=document.createElement('textarea'); ta.value=tekst; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('Gekopieerd — plak in de Claude-chat'); }catch(_){ toast('Kopiëren niet gelukt'); }
+    ta.remove();
+  }
+};
+
+let toastTimer;
+function toast(t){ toastEl.textContent=t; toastEl.classList.add('zien'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove('zien'),2200); }
+</script>
+
+</body>
+</html>
