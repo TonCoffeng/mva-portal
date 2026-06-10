@@ -10,6 +10,8 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+const RESEND_KEY   = process.env.RESEND_API_KEY;
+const MAIL_VAN     = 'MvA Meldpunt <noreply@makelaarsvan.nl>';
 
 const GELDIGE_STATUS = ['nieuw', 'opgepakt', 'klaar', 'afgewezen'];
 
@@ -48,7 +50,7 @@ exports.handler = async (event) => {
     try {
       const rows = await sbGet(
         'meldingen',
-        'select=id,gebruiker_naam,type,titel,samenvatting,details,app,prioriteit,status,directie_notitie,afgehandeld_door,bijlagen,aangemaakt_op,bijgewerkt_op&order=aangemaakt_op.desc&limit=500'
+        'select=id,gebruiker_naam,type,titel,samenvatting,details,app,prioriteit,status,directie_notitie,afgehandeld_door,melder_gemaild_op,bijlagen,aangemaakt_op,bijgewerkt_op&order=aangemaakt_op.desc&limit=500'
       );
       return { statusCode: 200, headers, body: JSON.stringify({ meldingen: rows }) };
     } catch (e) {
@@ -82,7 +84,22 @@ exports.handler = async (event) => {
 
     try {
       const rows = await sbPatch('meldingen', `id=eq.${id}`, patch);
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, melding: rows && rows[0] }) };
+      let m = rows && rows[0];
+      let gemaild = false;
+
+      // Terugkoppeling naar de melder zodra de melding op 'klaar' gaat — eenmalig.
+      if (m && patch.status === 'klaar' && !m.melder_gemaild_op) {
+        try {
+          const verstuurd = await mailNaarMelder(m);
+          if (verstuurd) {
+            const na = await sbPatch('meldingen', `id=eq.${id}`, { melder_gemaild_op: new Date().toISOString() });
+            if (na && na[0]) m = na[0];
+            gemaild = true;
+          }
+        } catch (e) { /* een mislukte mail mag het afronden niet blokkeren */ }
+      }
+
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, melding: m, gemaild }) };
     } catch (e) {
       return { statusCode: 502, headers, body: JSON.stringify({ error: 'Bijwerken mislukt' }) };
     }
@@ -132,4 +149,57 @@ async function sbPatch(tabel, filter, patch) {
   });
   if (!r.ok) throw new Error(`patch ${r.status}: ${await r.text()}`);
   return r.json();
+}
+
+// Stuurt de melder een terugkoppeling met de fix (= directie_notitie). Geeft true terug bij verzending.
+async function mailNaarMelder(m) {
+  if (!RESEND_KEY || !m.gebruiker_id) return false;
+
+  let email = null, naam = m.gebruiker_naam || '';
+  try {
+    const rows = await sbGet('gebruikers', `select=email,naam&id=eq.${m.gebruiker_id}&limit=1`);
+    const g = rows && rows[0];
+    if (g) { email = (g.email || '').trim() || null; naam = g.naam || naam; }
+  } catch (e) { return false; }
+  if (!email) return false;
+
+  const voornaam = (naam || '').trim().split(/\s+/)[0] || 'collega';
+  const titel = m.titel || 'je melding';
+  const fix = (m.directie_notitie || '').trim();
+  const onderwerp = `Je melding is opgelost — ${titel}`;
+
+  const fixBlok = fix
+    ? `<div style="background:#EAF3DE;border:1px solid #cfe3b4;border-radius:8px;padding:12px 14px;margin:14px 0">
+         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#3A6310;margin-bottom:5px">Wat we hebben gedaan</div>
+         <div style="white-space:pre-wrap;font-size:14px;line-height:1.55">${escapeHtml(fix)}</div>
+       </div>`
+    : `<p style="margin:14px 0;font-size:14px;line-height:1.55">We hebben je melding opgepakt en afgerond.</p>`;
+
+  const html =
+    `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#2A2A2A">
+       <div style="background:#1A2B5F;padding:18px 22px;border-radius:10px 10px 0 0">
+         <span style="color:#fff;font-size:16px;font-weight:bold">Makelaars van Amsterdam</span>
+         <span style="color:rgba(255,255,255,.6);font-size:11px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-top:2px">MvA Intelligence · Meldpunt</span>
+       </div>
+       <div style="border:1px solid #E7E3DB;border-top:none;border-radius:0 0 10px 10px;padding:22px">
+         <p style="margin:0 0 12px;font-size:14px">Hoi ${escapeHtml(voornaam)},</p>
+         <p style="margin:0 0 6px;font-size:14px">Je melding via het Meldpunt is afgehandeld:</p>
+         <p style="margin:0;font-weight:bold;font-size:15px;color:#1A2B5F">${escapeHtml(titel)}</p>
+         ${fixBlok}
+         <p style="margin:14px 0 0;color:#6B6760;font-size:13px">Bedankt voor het melden — dat helpt ons het platform te verbeteren.</p>
+         <p style="margin:16px 0 0;font-size:12px;color:#9A968D">MvA Intelligence</p>
+       </div>
+     </div>`;
+
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: MAIL_VAN, to: email, subject: onderwerp, html }),
+  });
+  if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
+  return true;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 }
