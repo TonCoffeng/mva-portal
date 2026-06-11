@@ -290,6 +290,10 @@ async function beheerActie(body, gebruiker) {
     if (typeof body.directie_notitie === 'string') patch.directie_notitie = body.directie_notitie.slice(0, 4000);
     if (patch.status && patch.status !== 'nieuw') patch.afgehandeld_door = gebruiker.naam;
     if (patch.status === 'nieuw') patch.afgehandeld_door = null;
+    // Heropenen (terug naar nieuw/in_behandeling) reset de mail-blokkade:
+    // wordt de melding daarna opnieuw afgerond, dan krijgt de melder
+    // gewoon weer een afrondingsmail (bv. klacht kwam terug).
+    if (patch.status === 'nieuw' || patch.status === 'in_behandeling') patch.melder_gemaild_op = null;
 
     await sbPatchRow(`meldingen?id=eq.${id}`, patch);
 
