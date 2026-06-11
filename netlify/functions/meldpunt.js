@@ -89,18 +89,31 @@ exports.handler = async (event) => {
   }
   if (!gebruiker) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Sessie ongeldig of verlopen' }) };
 
+  let body;
+  try {
+    body = JSON.parse(event.body || '{}');
+  } catch {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ongeldige aanvraag' }) };
+  }
+
+  // ── Beheer-acties (overzicht-tab): lijst / detail / update ─────────
+  // Deze route heeft geen Claude nodig en draait dus vóór de API-check.
+  if (body.action) {
+    try {
+      return await beheerActie(body, gebruiker);
+    } catch (e) {
+      console.error('[meldpunt] beheer-fout:', e.message);
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Er ging iets mis. Probeer het zo nog eens.' }) };
+    }
+  }
+
   if (!ANTHROPIC_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Meldpunt is nog niet geconfigureerd (API-key ontbreekt).' }) };
   }
 
   let messages, bijlagenIn = [];
-  try {
-    const body = JSON.parse(event.body || '{}');
-    messages = Array.isArray(body.messages) ? body.messages : [];
-    bijlagenIn = Array.isArray(body.bijlagen) ? body.bijlagen : [];
-  } catch {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ongeldige aanvraag' }) };
-  }
+  messages = Array.isArray(body.messages) ? body.messages : [];
+  bijlagenIn = Array.isArray(body.bijlagen) ? body.bijlagen : [];
   // Saniteer: alleen rol+content, en cap de lengte van het gesprek.
   messages = messages
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
@@ -217,6 +230,148 @@ exports.handler = async (event) => {
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+// ── Beheer-acties voor het Meldingen-overzicht ───────────────────
+// directie: ziet en beheert alles. Overige rollen: zien alleen hun
+// eigen meldingen, alleen-lezen. Statusflow: nieuw → in_behandeling →
+// afgerond/afgewezen. Bij afgerond/afgewezen gaat er één keer een mail
+// naar de melder (melder_gemaild_op voorkomt dubbele mails).
+const STATUSSEN = ['nieuw', 'in_behandeling', 'afgerond', 'afgewezen'];
+
+const beheerOk  = (data) => ({ statusCode: 200, headers, body: JSON.stringify(data) });
+const beheerErr = (code, msg) => ({ statusCode: code, headers, body: JSON.stringify({ error: msg }) });
+
+async function beheerActie(body, gebruiker) {
+  const isDirectie = gebruiker.rol === 'directie';
+
+  if (body.action === 'lijst') {
+    const filter = isDirectie ? '' : `&gebruiker_id=eq.${gebruiker.id}`;
+    const rows = await sbSelect(
+      `meldingen?select=id,gebruiker_id,gebruiker_naam,type,titel,samenvatting,app,prioriteit,status,` +
+      `aangemaakt_op,bijgewerkt_op,afgehandeld_door,directie_notitie,melder_gemaild_op` +
+      `&order=aangemaakt_op.desc&limit=200${filter}`
+    );
+    return beheerOk({
+      ik: { id: gebruiker.id, naam: gebruiker.naam, rol: gebruiker.rol, directie: isDirectie },
+      meldingen: rows,
+    });
+  }
+
+  if (body.action === 'detail') {
+    const id = parseInt(body.id);
+    if (!id) return beheerErr(400, 'Geen geldige melding-id');
+    const rows = await sbSelect(`meldingen?select=*&id=eq.${id}&limit=1`);
+    const m = rows[0];
+    if (!m) return beheerErr(404, 'Melding niet gevonden');
+    if (!isDirectie && Number(m.gebruiker_id) !== Number(gebruiker.id)) {
+      return beheerErr(403, 'Geen toegang tot deze melding');
+    }
+    // Bijlagen: verse tijdelijke downloadlinks
+    const bijlagen = [];
+    for (const b of (Array.isArray(m.bijlagen) ? m.bijlagen : [])) {
+      const url = await signedUrl(b.pad).catch(() => null);
+      bijlagen.push({ naam: b.naam || 'bestand', type: b.type || '', url });
+    }
+    return beheerOk({ melding: { ...m, bijlagen } });
+  }
+
+  if (body.action === 'update') {
+    if (!isDirectie) return beheerErr(403, 'Alleen directie kan meldingen bijwerken');
+    const id = parseInt(body.id);
+    if (!id) return beheerErr(400, 'Geen geldige melding-id');
+    const rows = await sbSelect(
+      `meldingen?select=id,gebruiker_id,gebruiker_naam,type,titel,status,directie_notitie,melder_gemaild_op&id=eq.${id}&limit=1`
+    );
+    const m = rows[0];
+    if (!m) return beheerErr(404, 'Melding niet gevonden');
+
+    const patch = { bijgewerkt_op: new Date().toISOString() };
+    if (body.status && STATUSSEN.includes(body.status)) patch.status = body.status;
+    if (typeof body.directie_notitie === 'string') patch.directie_notitie = body.directie_notitie.slice(0, 4000);
+    if (patch.status && patch.status !== 'nieuw') patch.afgehandeld_door = gebruiker.naam;
+    if (patch.status === 'nieuw') patch.afgehandeld_door = null;
+
+    await sbPatchRow(`meldingen?id=eq.${id}`, patch);
+
+    // Mail naar de melder bij afronden/afwijzen — precies één keer
+    let gemaild = false;
+    const eindstatus = patch.status === 'afgerond' || patch.status === 'afgewezen';
+    if (eindstatus && !m.melder_gemaild_op && RESEND_KEY) {
+      try {
+        const melderRows = await sbSelect(`gebruikers?select=naam,email&id=eq.${m.gebruiker_id}&limit=1`);
+        const melder = melderRows[0];
+        if (melder && melder.email) {
+          await mailNaarMelder({
+            melder,
+            titel:    m.titel || 'je melding',
+            type:     m.type,
+            status:   patch.status,
+            notitie:  patch.directie_notitie !== undefined ? patch.directie_notitie : (m.directie_notitie || ''),
+          });
+          await sbPatchRow(`meldingen?id=eq.${id}`, { melder_gemaild_op: new Date().toISOString() });
+          gemaild = true;
+        }
+      } catch (e) {
+        console.warn('[meldpunt] melder-mail mislukt:', e.message);
+      }
+    }
+    return beheerOk({ ok: true, gemaild });
+  }
+
+  return beheerErr(400, 'Onbekende actie');
+}
+
+async function sbSelect(pad) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${pad}`, {
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+  });
+  if (!r.ok) throw new Error(`select ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+async function sbPatchRow(pad, patch) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${pad}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE_KEY,
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify(patch),
+  });
+  if (!r.ok) throw new Error(`patch ${r.status}: ${await r.text()}`);
+}
+
+// Nette afrondingsmail naar de melder (huisstijl, één keer per melding).
+async function mailNaarMelder({ melder, titel, type, status, notitie }) {
+  const labels = { bug: 'bug', tip: 'tip', vraag: 'vraag', anders: 'melding' };
+  const soort = labels[type] || 'melding';
+  const afgerond = status === 'afgerond';
+  const onderwerp = afgerond
+    ? `[Meldpunt] Je ${soort} is opgepakt: ${titel}`
+    : `[Meldpunt] Update over je ${soort}: ${titel}`;
+  const kop = afgerond ? 'Je melding is opgepakt \u2713' : 'Update over je melding';
+  const intro = afgerond
+    ? `Goed nieuws: je ${soort} <b>"${escapeHtml(titel)}"</b> is opgepakt en afgerond.`
+    : `Je ${soort} <b>"${escapeHtml(titel)}"</b> is bekeken, maar wordt op dit moment niet opgepakt.`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;color:#2A2A2A;max-width:560px">
+      <h2 style="color:#1A2B5F;margin-bottom:4px">${kop}</h2>
+      <p>Hoi ${escapeHtml(melder.naam || '')},</p>
+      <p>${intro}</p>
+      ${notitie ? `<p style="color:#444;background:#F6F4EF;border-radius:8px;padding:12px"><b>Toelichting:</b><br>${escapeHtml(notitie).replace(/\n/g, '<br>')}</p>` : ''}
+      <p style="color:#6B6B6B">De volledige status van al je meldingen vind je in het Meldpunt op het portal, tab "Meldingen".</p>
+      <hr style="border:none;border-top:1px solid #E7E3DB">
+      <p style="font-size:12px;color:#9A9A9A">MvA Meldpunt &middot; bedankt voor het meedenken!</p>
+    </div>`;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, subject: onderwerp, html }),
+  });
+  if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
+}
 
 async function verifieerGebruiker(token) {
   const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
