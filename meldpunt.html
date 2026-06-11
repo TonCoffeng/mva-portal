@@ -452,7 +452,13 @@ function renderDetail(id, m){
         const r = await beheer({ action:'update', id, status: gekozenStatus, directie_notitie: ta.value.trim() });
         // lijst + cache verversen
         const rij = alleMeldingen.find(x=>x.id===id);
-        if(rij){ rij.status = gekozenStatus; rij.directie_notitie = ta.value.trim(); rij.afgehandeld_door = gekozenStatus==='nieuw' ? null : (ik.naam||''); if(r.gemaild) rij.melder_gemaild_op = new Date().toISOString(); }
+        if(rij){
+          rij.status = gekozenStatus;
+          rij.directie_notitie = ta.value.trim();
+          rij.afgehandeld_door = gekozenStatus==='nieuw' ? null : (ik.naam||'');
+          if(r.gemaild) rij.melder_gemaild_op = new Date().toISOString();
+          if(gekozenStatus==='nieuw' || gekozenStatus==='in_behandeling') rij.melder_gemaild_op = null;
+        }
         delete detailCache[id];
         renderFilters();
         renderLijst();
@@ -466,7 +472,7 @@ function renderDetail(id, m){
       const info = document.createElement('div');
       info.className = 'msub';
       info.style.marginTop = '.4rem';
-      info.textContent = 'De melder heeft al een afrondingsmail gehad \u2014 er wordt niet opnieuw gemaild.';
+      info.textContent = 'De melder heeft al een afrondingsmail gehad. Zet je de melding terug naar In behandeling, dan gaat er bij een nieuwe afronding w\u00E9l weer een mail.';
       beheerEl.appendChild(info);
     }
     det.appendChild(beheerEl);
