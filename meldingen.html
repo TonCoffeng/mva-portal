@@ -53,6 +53,8 @@
   .sbtn.aan-afgewezen{background:#9A1F1F;border-color:#9A1F1F;color:#fff}
   .kopieer{margin-left:auto;background:#E8500A;border:none;color:#fff;font-weight:600}
   .kopieer:hover{filter:brightness(.95)}
+  .claude-knop{background:#1A2B5F;border:none;color:#fff;font-weight:600}
+  .claude-knop:hover{filter:brightness(1.15)}
 
   .notitie-rij{margin-top:.7rem}
   .notitie-rij textarea{width:100%;border:1.5px solid #E2DFD8;border-radius:10px;padding:.55rem .7rem;font-size:13px;font-family:inherit;resize:vertical;min-height:46px;outline:none;background:#fff}
@@ -231,7 +233,8 @@ function render(){
 
       <div class="status-rij">
         ${statusKnoppen}
-        <button class="sbtn kopieer" onclick="kopieer(${m.id})">📋 Kopieer voor Claude</button>
+        <button class="sbtn kopieer" onclick="kopieer(${m.id})">📋 Kopieer</button>
+        <button class="sbtn claude-knop" onclick="openInClaude(${m.id})">✦ Stuur naar Claude</button>
       </div>
     </div>`;
   }).join('');
@@ -291,6 +294,28 @@ window.bewaarNotitie = async (id) => {
   } catch(e){ toast('Opslaan mislukt'); }
 };
 
+window.openInClaude = (id) => {
+  const m = alle.find(x=>x.id===id); if(!m) return;
+  const bijl = Array.isArray(m.bijlagen) ? m.bijlagen : [];
+  const tekst =
+`Melding #${m.id} uit het MvA Meldpunt
+Type: ${m.type||'anders'} · Prioriteit: ${m.prioriteit||'midden'} · App: ${m.app||'onbekend'}
+Gemeld door: ${m.gebruiker_naam||'onbekend'} op ${datum(m.aangemaakt_op)}
+Status: ${m.status}
+
+Titel: ${m.titel||'-'}
+
+Samenvatting:
+${m.samenvatting||'-'}
+
+Details:
+${m.details||'-'}
+
+Bijlagen: ${bijl.length ? bijl.map(b=>b.naam).join(', ') : 'geen'}${m.directie_notitie ? `\n\nNotitie directie:\n${m.directie_notitie}` : ''}`;
+  const url = 'https://claude.ai/new?q=' + encodeURIComponent(tekst);
+  window.open(url, '_blank');
+};
+
 window.kopieer = async (id) => {
   const m = alle.find(x=>x.id===id); if(!m) return;
   const bijl = Array.isArray(m.bijlagen) ? m.bijlagen : [];
@@ -311,11 +336,11 @@ ${m.details||'-'}
 Bijlagen: ${bijl.length ? bijl.map(b=>b.naam).join(', ') : 'geen'}${m.directie_notitie ? `\n\nNotitie directie:\n${m.directie_notitie}` : ''}`;
   try {
     await navigator.clipboard.writeText(tekst);
-    toast('Gekopieerd — plak in de Claude-chat');
+    toast('Gekopieerd naar klembord');
   } catch(e){
     // Fallback voor browsers zonder clipboard-API
     const ta=document.createElement('textarea'); ta.value=tekst; document.body.appendChild(ta); ta.select();
-    try{ document.execCommand('copy'); toast('Gekopieerd — plak in de Claude-chat'); }catch(_){ toast('Kopiëren niet gelukt'); }
+    try{ document.execCommand('copy'); toast('Gekopieerd naar klembord'); }catch(_){ toast('Kopiëren niet gelukt'); }
     ta.remove();
   }
 };
