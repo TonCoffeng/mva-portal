@@ -22,6 +22,12 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
 .intro h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:24px;color:#1A2B5F}
 .intro p{font-size:13px;color:#6B6760;margin-top:.3rem;line-height:1.55}
 
+/* ── Tabs ── */
+.tabs{display:flex;gap:.4rem;padding:.7rem 1.25rem 0}
+.tab{font-family:inherit;font-size:13px;font-weight:600;color:#6B6760;background:none;border:none;border-bottom:2.5px solid transparent;padding:.45rem .65rem;cursor:pointer}
+.tab.actief{color:#1A2B5F;border-bottom-color:#E8500A}
+.tab:hover{color:#1A2B5F}
+
 #chat{flex:1;overflow-y:auto;padding:1rem 1.25rem 1.5rem;display:flex;flex-direction:column;gap:.7rem}
 .msg{max-width:84%;padding:.7rem .95rem;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;animation:up .25s ease both}
 @keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -54,6 +60,46 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
 .newbtn{align-self:center;margin-top:.2rem;font-size:13px;color:#1A2B5F;background:none;border:1px solid #D8D3C9;border-radius:8px;padding:.45rem .9rem;cursor:pointer;font-family:inherit}
 .newbtn:hover{background:#fff}
 
+/* ── Overzicht ── */
+#overzicht{flex:1;overflow-y:auto;padding:.8rem 1.25rem 2rem;display:none}
+.filterbar{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.9rem;align-items:center}
+.fpil{font-family:inherit;font-size:12px;font-weight:600;border:1px solid #E2DFD8;background:#fff;color:#6B6760;border-radius:999px;padding:.32rem .7rem;cursor:pointer}
+.fpil.actief{background:#1A2B5F;color:#fff;border-color:#1A2B5F}
+.fpil:hover{border-color:#1A2B5F;color:#1A2B5F}
+.fpil.actief:hover{color:#fff}
+.ververs{margin-left:auto;font-family:inherit;font-size:12px;color:#1A2B5F;background:none;border:1px solid #D8D3C9;border-radius:8px;padding:.32rem .7rem;cursor:pointer}
+.ververs:hover{background:#fff}
+.mcard{background:#fff;border:1px solid #E2DFD8;border-radius:12px;padding:.85rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:border-color .15s}
+.mcard:hover{border-color:#1A2B5F}
+.mcard.open{cursor:default;border-color:#1A2B5F}
+.mtop{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.mtitel{font-size:14px;font-weight:600;color:#1A2B5F;flex:1;min-width:160px}
+.badge{font-size:11px;font-weight:600;border-radius:999px;padding:.18rem .55rem;white-space:nowrap}
+.b-nieuw{background:#FDEBDD;color:#B23E06}
+.b-in_behandeling{background:#E3ECFA;color:#1A2B5F}
+.b-afgerond{background:#EAF3DE;color:#27500A}
+.b-afgewezen{background:#EEECE7;color:#6B6760}
+.b-prio-hoog{background:#FDE2E2;color:#8F1D1D}
+.msub{font-size:12px;color:#6B6760;margin-top:.3rem}
+.mdetail{margin-top:.8rem;border-top:1px solid #EEECE7;padding-top:.8rem;font-size:13px;color:#2A2A2A;line-height:1.55}
+.mdetail h4{font-size:12px;color:#6B6760;text-transform:uppercase;letter-spacing:.04em;margin:.7rem 0 .25rem}
+.mdetail h4:first-child{margin-top:0}
+.mdetail a{color:#1A2B5F}
+.mnotitie{background:#F6F4EF;border-radius:8px;padding:.6rem .75rem;white-space:pre-wrap}
+.beheer{margin-top:.9rem;border-top:1px dashed #E2DFD8;padding-top:.8rem}
+.statusknoppen{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.sknop{font-family:inherit;font-size:12px;font-weight:600;border:1.5px solid #E2DFD8;background:#fff;color:#6B6760;border-radius:8px;padding:.4rem .7rem;cursor:pointer}
+.sknop.actief{border-color:#1A2B5F;color:#1A2B5F;background:#E3ECFA}
+.sknop:hover{border-color:#1A2B5F}
+.beheer textarea{width:100%;border:1.5px solid #E2DFD8;border-radius:10px;padding:.6rem .75rem;font-size:13px;font-family:inherit;resize:vertical;min-height:64px;outline:none;background:#fff}
+.beheer textarea:focus{border-color:#1A2B5F}
+.opslaan{margin-top:.5rem;font-family:inherit;font-size:13px;font-weight:600;background:#E8500A;color:#fff;border:none;border-radius:9px;padding:.5rem 1rem;cursor:pointer}
+.opslaan:hover{background:#cf4708}
+.opslaan:disabled{background:#D8D3C9;cursor:default}
+.leeg{font-size:13px;color:#6B6760;text-align:center;padding:2rem 0}
+.transcripttoggle{font-family:inherit;font-size:12px;color:#1A2B5F;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0}
+.transcript{margin-top:.5rem;background:#F6F4EF;border-radius:8px;padding:.6rem .75rem;font-size:12px;white-space:pre-wrap;max-height:260px;overflow-y:auto}
+
 #gate{position:fixed;inset:0;background:#1A2B5F;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:2rem;z-index:50}
 #gate a{color:#fff;text-decoration:underline}
 </style>
@@ -69,15 +115,24 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
   <a class="back" href="https://portal.makelaarsvan.nl/">&larr; Terug naar portal</a>
 </header>
 
+<div class="tabs">
+  <button class="tab actief" id="tab-melden">&#128172; Melden</button>
+  <button class="tab" id="tab-overzicht">&#128203; Meldingen</button>
+</div>
+
 <div class="wrap">
-  <div class="intro">
+  <div class="intro" id="intro-melden">
     <h1>Meldpunt</h1>
     <p>Iets dat niet werkt, of een idee om het platform beter te maken? Vertel het hieronder. Claude vraagt even door en zorgt dat het netjes bij Ton terechtkomt.</p>
   </div>
   <div id="chat"></div>
+  <div id="overzicht">
+    <div class="filterbar" id="filterbar"></div>
+    <div id="mlijst"><div class="leeg">Laden&hellip;</div></div>
+  </div>
 </div>
 
-<div class="composer">
+<div class="composer" id="composer">
   <div id="chips" class="chips"></div>
   <div class="composer-inner">
     <button id="clip" title="Screenshot of document toevoegen">&#128206;</button>
@@ -117,16 +172,38 @@ const BUCKET = 'meldpunt-bijlagen';
 const MAX_MB = 10;
 
 // ── Sessie ophalen via gedeelde SSO-cookie ──
+// Drie-CDN fallback (jsDelivr → esm.sh → Skypack) met timeout per CDN,
+// zelfde hardening als het portal — één wegvallende CDN blokkeert niets.
+async function laadSupabaseSSR(){
+  const cdns = [
+    'https://cdn.jsdelivr.net/npm/@supabase/ssr@0.5.2/+esm',
+    'https://esm.sh/@supabase/ssr@0.5.2',
+    'https://cdn.skypack.dev/@supabase/ssr@0.5.2',
+  ];
+  for(const url of cdns){
+    try{
+      const mod = await Promise.race([
+        import(url),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 8000)),
+      ]);
+      if(mod && mod.createBrowserClient) return mod;
+    }catch(e){ console.warn('SSO-CDN faalde:', url, e && e.message); }
+  }
+  return null;
+}
+
 let sb;
 try {
-  const { createBrowserClient } = await import('https://esm.sh/@supabase/ssr@0.5.2');
-  sb = createBrowserClient(SB_URL, SB_KEY, {
-    cookieOptions: { domain: '.makelaarsvan.nl', path: '/', sameSite: 'lax', secure: true, maxAge: 60*60*24*30 }
-  });
-  const { data } = await sb.auth.getSession();
-  if (data && data.session && data.session.access_token) {
-    token = data.session.access_token;
-    authUuid = data.session.user && data.session.user.id;
+  const mod = await laadSupabaseSSR();
+  if (mod) {
+    sb = mod.createBrowserClient(SB_URL, SB_KEY, {
+      cookieOptions: { domain: '.makelaarsvan.nl', path: '/', sameSite: 'lax', secure: true, maxAge: 60*60*24*30 }
+    });
+    const { data } = await sb.auth.getSession();
+    if (data && data.session && data.session.access_token) {
+      token = data.session.access_token;
+      authUuid = data.session.user && data.session.user.id;
+    }
   }
 } catch (e) {
   console.error('SSO init faalde:', e);
@@ -138,7 +215,280 @@ if (!token) {
   bubble('bot', 'Hoi! Wat speelt er? Vertel kort wat je tegenkwam of welk idee je hebt \u2014 ik vraag daarna even door.');
 }
 
-// ── UI helpers ──
+// ── Tabs ──
+const tabMelden = document.getElementById('tab-melden');
+const tabOverzicht = document.getElementById('tab-overzicht');
+const composer = document.getElementById('composer');
+const overzichtEl = document.getElementById('overzicht');
+const introMelden = document.getElementById('intro-melden');
+let overzichtGeladen = false;
+
+function wisselTab(naam){
+  const melden = naam === 'melden';
+  tabMelden.classList.toggle('actief', melden);
+  tabOverzicht.classList.toggle('actief', !melden);
+  chat.style.display = melden ? 'flex' : 'none';
+  introMelden.style.display = melden ? '' : 'none';
+  composer.style.display = melden ? '' : 'none';
+  overzichtEl.style.display = melden ? 'none' : 'block';
+  if(!melden && !overzichtGeladen){ laadLijst(); }
+}
+tabMelden.addEventListener('click', ()=>wisselTab('melden'));
+tabOverzicht.addEventListener('click', ()=>wisselTab('overzicht'));
+
+// ── Overzicht ──
+const STATUS_LABEL = { nieuw:'Nieuw', in_behandeling:'In behandeling', afgerond:'Afgerond', afgewezen:'Afgewezen' };
+const TYPE_ICOON   = { bug:'\u{1F41B}', tip:'\u{1F4A1}', vraag:'\u2753', anders:'\u{1F4DD}' };
+let ik = null;
+let alleMeldingen = [];
+let statusFilter = 'alle';
+let openMeldingId = null;
+let detailCache = {};
+
+async function beheer(payload){
+  const res = await fetch(FN, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || 'Er ging iets mis');
+  return data;
+}
+
+async function laadLijst(){
+  const lijstEl = document.getElementById('mlijst');
+  lijstEl.innerHTML = '<div class="leeg">Laden\u2026</div>';
+  try{
+    const data = await beheer({ action:'lijst' });
+    ik = data.ik;
+    alleMeldingen = data.meldingen || [];
+    overzichtGeladen = true;
+    detailCache = {};
+    renderFilters();
+    renderLijst();
+  }catch(e){
+    lijstEl.innerHTML = '<div class="leeg">Kon de meldingen niet laden: '+escapeHtml(e.message)+'</div>';
+  }
+}
+
+function renderFilters(){
+  const bar = document.getElementById('filterbar');
+  bar.innerHTML = '';
+  const opties = ['alle','nieuw','in_behandeling','afgerond','afgewezen'];
+  opties.forEach(o=>{
+    const aantal = o==='alle' ? alleMeldingen.length : alleMeldingen.filter(m=>m.status===o).length;
+    const b = document.createElement('button');
+    b.className = 'fpil' + (statusFilter===o ? ' actief' : '');
+    b.textContent = (o==='alle' ? 'Alle' : STATUS_LABEL[o]) + ' ('+aantal+')';
+    b.onclick = ()=>{ statusFilter = o; renderFilters(); renderLijst(); };
+    bar.appendChild(b);
+  });
+  const r = document.createElement('button');
+  r.className = 'ververs';
+  r.textContent = '\u21BB Verversen';
+  r.onclick = laadLijst;
+  bar.appendChild(r);
+}
+
+function renderLijst(){
+  const lijstEl = document.getElementById('mlijst');
+  lijstEl.innerHTML = '';
+  const items = statusFilter==='alle' ? alleMeldingen : alleMeldingen.filter(m=>m.status===statusFilter);
+  if(items.length===0){
+    lijstEl.innerHTML = '<div class="leeg">'+(ik && ik.directie ? 'Geen meldingen in deze status.' : 'Je hebt nog geen meldingen in deze status. Meld iets via de tab "Melden"!')+'</div>';
+    return;
+  }
+  items.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'mcard' + (openMeldingId===m.id ? ' open' : '');
+    card.dataset.id = m.id;
+
+    const top = document.createElement('div');
+    top.className = 'mtop';
+    const titel = document.createElement('div');
+    titel.className = 'mtitel';
+    titel.textContent = (TYPE_ICOON[m.type]||'') + ' ' + (m.titel || 'Zonder titel');
+    top.appendChild(titel);
+    if(m.prioriteit==='hoog'){
+      const p = document.createElement('span');
+      p.className = 'badge b-prio-hoog'; p.textContent = 'Hoog';
+      top.appendChild(p);
+    }
+    const st = document.createElement('span');
+    st.className = 'badge b-'+m.status; st.textContent = STATUS_LABEL[m.status] || m.status;
+    top.appendChild(st);
+    card.appendChild(top);
+
+    const sub = document.createElement('div');
+    sub.className = 'msub';
+    const d = (m.aangemaakt_op||'').slice(0,10).split('-').reverse().join('-');
+    sub.textContent = (m.gebruiker_naam||'?') + ' \u00B7 ' + (m.app||'\u2014') + ' \u00B7 ' + d;
+    card.appendChild(sub);
+
+    if(openMeldingId===m.id){
+      const det = document.createElement('div');
+      det.className = 'mdetail';
+      det.id = 'detail-'+m.id;
+      det.innerHTML = '<div class="leeg" style="padding:.6rem 0">Laden\u2026</div>';
+      card.appendChild(det);
+      laadDetail(m.id);
+    } else {
+      card.onclick = ()=>{ openMeldingId = m.id; renderLijst(); };
+    }
+    lijstEl.appendChild(card);
+  });
+}
+
+async function laadDetail(id){
+  try{
+    if(!detailCache[id]){
+      const data = await beheer({ action:'detail', id });
+      detailCache[id] = data.melding;
+    }
+    renderDetail(id, detailCache[id]);
+  }catch(e){
+    const det = document.getElementById('detail-'+id);
+    if(det) det.innerHTML = '<div class="leeg" style="padding:.6rem 0">'+escapeHtml(e.message)+'</div>';
+  }
+}
+
+function renderDetail(id, m){
+  const det = document.getElementById('detail-'+id);
+  if(!det) return;
+  det.innerHTML = '';
+
+  if(m.samenvatting){
+    det.appendChild(kop('Samenvatting'));
+    det.appendChild(tekstBlok(m.samenvatting));
+  }
+  if(m.details){
+    det.appendChild(kop('Details'));
+    det.appendChild(tekstBlok(m.details));
+  }
+  if(Array.isArray(m.bijlagen) && m.bijlagen.length){
+    det.appendChild(kop('Bijlagen'));
+    const ul = document.createElement('div');
+    m.bijlagen.forEach(b=>{
+      const rij = document.createElement('div');
+      if(b.url){
+        const a = document.createElement('a');
+        a.href = b.url; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = '\u{1F4CE} ' + (b.naam||'bestand');
+        rij.appendChild(a);
+      } else {
+        rij.textContent = '\u{1F4CE} ' + (b.naam||'bestand') + ' (link niet beschikbaar)';
+      }
+      ul.appendChild(rij);
+    });
+    det.appendChild(ul);
+  }
+  if(m.directie_notitie){
+    det.appendChild(kop('Notitie directie'));
+    const n = document.createElement('div');
+    n.className = 'mnotitie';
+    n.textContent = m.directie_notitie;
+    det.appendChild(n);
+  }
+  if(m.afgehandeld_door){
+    const af = document.createElement('div');
+    af.className = 'msub';
+    af.style.marginTop = '.5rem';
+    af.textContent = 'Afgehandeld door: ' + m.afgehandeld_door + (m.melder_gemaild_op ? ' \u00B7 melder gemaild' : '');
+    det.appendChild(af);
+  }
+
+  // Transcript inklapbaar
+  if(Array.isArray(m.transcript) && m.transcript.length){
+    const t = document.createElement('button');
+    t.className = 'transcripttoggle';
+    t.style.marginTop = '.6rem';
+    t.textContent = 'Toon gesprek ('+m.transcript.length+' berichten)';
+    const blok = document.createElement('div');
+    blok.className = 'transcript';
+    blok.style.display = 'none';
+    blok.textContent = m.transcript.map(b=>(b.role==='user'?'\u{1F464} ':'\u{1F916} ')+b.content).join('\n\n');
+    t.onclick = ()=>{
+      const open = blok.style.display !== 'none';
+      blok.style.display = open ? 'none' : 'block';
+      t.textContent = (open ? 'Toon' : 'Verberg') + ' gesprek ('+m.transcript.length+' berichten)';
+    };
+    det.appendChild(t);
+    det.appendChild(blok);
+  }
+
+  // Beheer (alleen directie)
+  if(ik && ik.directie){
+    const beheerEl = document.createElement('div');
+    beheerEl.className = 'beheer';
+    let gekozenStatus = m.status;
+
+    const knoppen = document.createElement('div');
+    knoppen.className = 'statusknoppen';
+    ['nieuw','in_behandeling','afgerond','afgewezen'].forEach(s=>{
+      const k = document.createElement('button');
+      k.className = 'sknop' + (s===gekozenStatus ? ' actief' : '');
+      k.textContent = STATUS_LABEL[s];
+      k.onclick = ()=>{
+        gekozenStatus = s;
+        knoppen.querySelectorAll('.sknop').forEach(el=>el.classList.remove('actief'));
+        k.classList.add('actief');
+      };
+      knoppen.appendChild(k);
+    });
+    beheerEl.appendChild(knoppen);
+
+    const ta = document.createElement('textarea');
+    ta.placeholder = 'Notitie voor de melder (wat is er gedaan / waarom niet) \u2014 gaat mee in de mail bij Afgerond of Afgewezen';
+    ta.value = m.directie_notitie || '';
+    beheerEl.appendChild(ta);
+
+    const ok = document.createElement('button');
+    ok.className = 'opslaan';
+    ok.textContent = 'Opslaan';
+    ok.onclick = async ()=>{
+      ok.disabled = true; ok.textContent = 'Opslaan\u2026';
+      try{
+        const r = await beheer({ action:'update', id, status: gekozenStatus, directie_notitie: ta.value.trim() });
+        // lijst + cache verversen
+        const rij = alleMeldingen.find(x=>x.id===id);
+        if(rij){ rij.status = gekozenStatus; rij.directie_notitie = ta.value.trim(); rij.afgehandeld_door = gekozenStatus==='nieuw' ? null : (ik.naam||''); if(r.gemaild) rij.melder_gemaild_op = new Date().toISOString(); }
+        delete detailCache[id];
+        renderFilters();
+        renderLijst();
+      }catch(e){
+        ok.disabled = false; ok.textContent = 'Opslaan';
+        alert('Opslaan mislukte: '+e.message);
+      }
+    };
+    beheerEl.appendChild(ok);
+    if(m.melder_gemaild_op){
+      const info = document.createElement('div');
+      info.className = 'msub';
+      info.style.marginTop = '.4rem';
+      info.textContent = 'De melder heeft al een afrondingsmail gehad \u2014 er wordt niet opnieuw gemaild.';
+      beheerEl.appendChild(info);
+    }
+    det.appendChild(beheerEl);
+  }
+
+  // Sluiten
+  const sluit = document.createElement('button');
+  sluit.className = 'transcripttoggle';
+  sluit.style.marginTop = '.7rem';
+  sluit.textContent = 'Sluiten';
+  sluit.onclick = (ev)=>{ ev.stopPropagation(); openMeldingId = null; renderLijst(); };
+  det.appendChild(document.createElement('div')).appendChild(sluit);
+
+  function kop(t){ const h = document.createElement('h4'); h.textContent = t; return h; }
+  function tekstBlok(t){ const p = document.createElement('div'); p.style.whiteSpace = 'pre-wrap'; p.textContent = t; return p; }
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// ── UI helpers (chat) ──
 function bubble(klasse, tekst){
   const d = document.createElement('div');
   d.className = 'msg ' + klasse;
@@ -254,8 +604,9 @@ async function verstuur(){
       messages.push({ role:'assistant', content: reply });
       if(data.opgeslagen){
         const soort = data.type==='bug' ? 'bug' : (data.type==='tip' ? 'tip' : 'melding');
-        saved('\u2713 Je '+soort+' is vastgelegd. Ton krijgt er bericht van \u2014 bedankt!');
+        saved('\u2713 Je '+soort+' is vastgelegd. Je vindt \u2019m terug onder de tab "Meldingen" \u2014 bedankt!');
         afgerond = true;
+        overzichtGeladen = false; // lijst is verouderd; bij tab-wissel opnieuw laden
         toonNieuw();
       }
     }
