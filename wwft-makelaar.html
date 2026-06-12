@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mijn WWFT-zaken · MVA Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1A2B5F;
+      --navy-light: #25346c;
+      --oranje: #E8500A;
+      --wit: #ffffff;
+      --grijs: #f4f5f8;
+      --grijs-mid: #e2e5ed;
+      --grijs-tekst: #6b7280;
+      --groen: #16a34a;
+      --groen-bg: #f0fdf4;
+      --rood: #dc2626;
+      --geel: #d97706;
+      --geel-bg: #fffbeb;
+      --blauw: #3b82f6;
+      --blauw-bg: #eff6ff;
+      --slot-bg: #fef3c7;
+      --slot-border: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Roboto', sans-serif; background: var(--grijs); color: var(--navy); min-height: 100vh; }
+
+    /* HEADER */
+    .header {
+      background: var(--navy);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header-logo { display: flex; align-items: center; gap: 10px; }
+    .header-logo .dot { width: 32px; height: 32px; background: var(--oranje); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px; color: #fff; }
+    .header-title { font-size: 16px; font-weight: 500; color: #fff; }
+    .header-sub { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .back-btn {
+      color: rgba(255,255,255,0.8); text-decoration: none; font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.3); padding: 6px 12px; border-radius: 6px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* MAIN */
+    .main { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
+
+    /* LOADER / STATES */
+    #laadscherm, #foutscherm, #leegscherm {
+      text-align: center; padding: 60px 20px; color: var(--grijs-tekst); font-size: 15px;
+    }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--grijs-mid);
+      border-top-color: var(--navy); border-radius: 50%;
+      animation: spin 0.7s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ZAAK CARD */
+    .zaak-card {
+      background: #fff; border-radius: 12px; margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;
+      border: 1px solid var(--grijs-mid);
+    }
+    .zaak-card.op-slot {
+      border-color: var(--slot-border);
+      background: var(--slot-bg);
+    }
+    .zaak-header {
+      padding: 16px 20px; display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px; cursor: pointer;
+    }
+    .zaak-header:hover { background: rgba(0,0,0,0.02); }
+    .zaak-adres { font-size: 15px; font-weight: 500; }
+    .zaak-meta { font-size: 12px; color: var(--grijs-tekst); margin-top: 4px; }
+    .zaak-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .badge {
+      font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px;
+    }
+    .badge-otd    { background: var(--blauw-bg);  color: var(--blauw); }
+    .badge-wwft   { background: var(--groen-bg);  color: var(--groen); }
+    .badge-factuur{ background: var(--grijs-mid); color: var(--navy);  }
+    .badge-slot   { background: var(--slot-bg);   color: var(--geel);  border: 1px solid var(--slot-border); }
+    .badge-open   { background: var(--geel-bg);   color: var(--geel);  }
+    .badge-afgerond{ background: var(--groen-bg); color: var(--groen); }
+
+    .chevron { font-size: 18px; color: var(--grijs-tekst); flex-shrink: 0; margin-top: 2px; transition: transform 0.2s; }
+    .chevron.open { transform: rotate(90deg); }
+
+    /* DETAIL PANEEL */
+    .zaak-detail { display: none; padding: 0 20px 20px; border-top: 1px solid var(--grijs-mid); }
+    .zaak-detail.zichtbaar { display: block; }
+
+    /* SLOT MELDING */
+    .slot-melding {
+      background: var(--slot-bg); border: 1px solid var(--slot-border); border-radius: 8px;
+      padding: 12px 14px; font-size: 13px; color: #92400e; margin-bottom: 16px; margin-top: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ACTIES */
+    .actie-sectie { margin-top: 16px; }
+    .sectie-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--grijs-tekst); margin-bottom: 10px; }
+
+    /* VINKJE */
+    .check-rij {
+      display: flex; align-items: center; gap: 10px; padding: 10px 0;
+      border-top: 1px solid var(--grijs-mid);
+    }
+    .check-rij label { font-size: 14px; cursor: pointer; }
+    .check-box { width: 18px; height: 18px; cursor: pointer; accent-color: var(--groen); }
+    .check-box:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    /* UPLOAD */
+    .upload-zone {
+      border: 2px dashed var(--grijs-mid); border-radius: 8px;
+      padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s;
+      background: #fff; margin-top: 10px;
+    }
+    .upload-zone:hover { border-color: var(--navy); }
+    .upload-zone.uploading { border-color: var(--blauw); }
+    .upload-zone p { font-size: 13px; color: var(--grijs-tekst); }
+    .upload-zone .icon { font-size: 28px; margin-bottom: 8px; }
+    input[type=file] { display: none; }
+
+    /* BEWIJS LIJST */
+    .bewijs-lijst { margin-top: 10px; }
+    .bewijs-item {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; padding: 7px 10px; background: var(--blauw-bg);
+      border-radius: 6px; margin-bottom: 6px; gap: 8px;
+    }
+    .bewijs-item a { color: var(--blauw); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bewijs-item a:hover { text-decoration: underline; }
+
+    /* OPSLAAN KNOP */
+    .btn-opslaan {
+      margin-top: 16px; background: var(--navy); color: #fff;
+      border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px;
+      font-weight: 500; cursor: pointer; width: 100%;
+    }
+    .btn-opslaan:hover { background: var(--navy-light); }
+    .btn-opslaan:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* FEEDBACK */
+    .feedback { font-size: 13px; margin-top: 8px; padding: 8px 12px; border-radius: 6px; }
+    .feedback.ok   { background: var(--groen-bg); color: var(--groen); }
+    .feedback.fout { background: #fef2f2; color: var(--rood); }
+
+    /* NOTITIE MONIQUE */
+    .notitie-box {
+      background: var(--geel-bg); border: 1px solid #fde68a; border-radius: 8px;
+      padding: 12px 14px; font-size: 13px; color: #78350f; margin-top: 12px;
+    }
+    .notitie-box strong { display: block; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 4px; }
+
+    /* SECTIE HEADER */
+    .pagina-header { margin-bottom: 20px; }
+    .pagina-header h1 { font-size: 20px; font-weight: 600; }
+    .pagina-header p { font-size: 13px; color: var(--grijs-tekst); margin-top: 4px; }
+
+    /* PROGRESS */
+    .progress-bar-wrap { background: var(--grijs-mid); border-radius: 4px; height: 6px; margin-top: 8px; }
+    .progress-bar { background: var(--groen); height: 6px; border-radius: 4px; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="dot">M</div>
+    <div>
+      <div class="header-title">Mijn WWFT-zaken</div>
+      <div class="header-sub" id="gebruiker-naam">laden…</div>
+    </div>
+  </div>
+  <a class="back-btn" href="https://portal.makelaarsvan.nl/">← Portal</a>
+</div>
+
+<div class="main">
+  <div class="pagina-header">
+    <h1>WWFT-zaken</h1>
+    <p>Uw dossiers waarvoor een WWFT-controle vereist is. Upload het bewijs en zet het vinkje zodra u de controle heeft uitgevoerd.</p>
+  </div>
+
+  <div id="laadscherm">
+    <div class="spinner"></div>
+    <p>Zaken ophalen…</p>
+  </div>
+  <div id="foutscherm" style="display:none">
+    <p>⚠️ Kon zaken niet laden. Probeer de pagina te vernieuwen.</p>
+  </div>
+  <div id="leegscherm" style="display:none">
+    <p>✅ U heeft momenteel geen openstaande WWFT-zaken.</p>
+  </div>
+  <div id="zaken-lijst"></div>
+</div>
+
+<!-- SUPABASE CDN met fallback -->
+<script>
+(function() {
+  const SB_URL = 'https://olfcrzusdkijxroxvsgm.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sZmNyenVzZGtpanhyb3h2c2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MDIxMTIsImV4cCI6MjA2MDM3ODExMn0.BhHAFGMjmGvaMPyAmDJoGCUQP2-7TLLiSpVJp-8vNyA';
+  const BUCKET = 'wwft-bewijs';
+
+  let supabase = null;
+  let huidigGebruiker = null;
+
+  const CDN_URLS = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    'https://esm.sh/@supabase/supabase-js@2?bundle',
+    'https://cdn.skypack.dev/@supabase/supabase-js@2'
+  ];
+
+  async function laadCDN(urls) {
+    for (const url of urls) {
+      try {
+        await new Promise((ok, fail) => {
+          if (url.includes('esm.sh') || url.includes('skypack')) {
+            import(url).then(m => { window.__SB = m.createClient; ok(); }).catch(fail);
+          } else {
+            const s = document.createElement('script');
+            s.src = url; s.onload = ok; s.onerror = fail;
+            document.head.appendChild(s);
+          }
+        });
+        return true;
+      } catch { /* volgende */ }
+    }
+    return false;
+  }
+
+  async function init() {
+    const ok = await laadCDN(CDN_URLS);
+    if (!ok) { toonFout(); return; }
+
+    const createClient = window.supabase?.createClient || window.__SB;
+    if (!createClient) { toonFout(); return; }
+
+    supabase = createClient(SB_URL, SB_KEY);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = 'https://portal.makelaarsvan.nl/?redir=wwft-makelaar';
+      return;
+    }
+    huidigGebruiker = session.user;
+    document.getElementById('gebruiker-naam').textContent = huidigGebruiker.email;
+
+    await laadZaken();
+  }
+
+  async function laadZaken() {
+    document.getElementById('laadscherm').style.display = 'block';
+    document.getElementById('foutscherm').style.display = 'none';
+    document.getElementById('leegscherm').style.display = 'none';
+    document.getElementById('zaken-lijst').innerHTML = '';
+
+    const { data, error } = await supabase
+      .from('wwft_zaken')
+      .select('*')
+      .eq('makelaar_email', huidigGebruiker.email)
+      .order('aangemaakt_op', { ascending: false });
+
+    document.getElementById('laadscherm').style.display = 'none';
+
+    if (error) { toonFout(); return; }
+    if (!data || data.length === 0) {
+      document.getElementById('leegscherm').style.display = 'block';
+      return;
+    }
+
+    const lijst = document.getElementById('zaken-lijst');
+    data.forEach(zaak => lijst.appendChild(maakZaakCard(zaak)));
+  }
+
+  function maakZaakCard(zaak) {
+    const card = document.createElement('div');
+    card.className = 'zaak-card' + (zaak.op_slot ? ' op-slot' : '');
+    card.dataset.id = zaak.id;
+
+    const ondertekendDatum = zaak.ondertekend_op
+      ? new Date(zaak.ondertekend_op).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+
+    const otdBadge  = zaak.otd_aanwezig  ? '<span class="badge badge-otd">OTD ✓</span>'     : (zaak.otd_ontbreekt ? '<span class="badge badge-open">OTD ontbreekt</span>' : '');
+    const wwftBadge = zaak.wwft_uitgevoerd ? '<span class="badge badge-wwft">WWFT ✓</span>'  : '<span class="badge badge-open">WWFT open</span>';
+    const factuurBadge = zaak.factuur_id   ? '<span class="badge badge-factuur">Factuur ✓</span>' : '';
+    const slotBadge = zaak.op_slot         ? '<span class="badge badge-slot">🔒 Vergrendeld</span>' : '';
+    const statusBadge = zaak.status === 'afgerond' ? '<span class="badge badge-afgerond">Afgerond</span>' : '';
+
+    const urls = Array.isArray(zaak.wwft_bewijs_urls) ? zaak.wwft_bewijs_urls : [];
+    const aantalBewijs = urls.length;
+    const bewijsBadge = aantalBewijs > 0 ? `<span class="badge badge-otd">${aantalBewijs} bestand${aantalBewijs > 1 ? 'en' : ''}</span>` : '';
+
+    card.innerHTML = `
+      <div class="zaak-header" onclick="toggleDetail('${zaak.id}')">
+        <div style="flex:1">
+          <div class="zaak-adres">${zaak.object_adres || '(adres onbekend)'}</div>
+          <div class="zaak-meta">Getekend: ${ondertekendDatum} · ${zaak.makelaar_naam || ''}</div>
+          <div class="zaak-badges">${otdBadge}${wwftBadge}${factuurBadge}${bewijsBadge}${slotBadge}${statusBadge}</div>
+        </div>
+        <span class="chevron" id="chevron-${zaak.id}">›</span>
+      </div>
+      <div class="zaak-detail" id="detail-${zaak.id}">
+        ${zaak.op_slot ? `
+          <div class="slot-melding">
+            🔒 <strong>Factuur ontvangen — Monique controleert.</strong>&nbsp;U kunt dit dossier niet meer bewerken.
+          </div>
+        ` : ''}
+
+        ${zaak.directie_notitie ? `
+          <div class="notitie-box" style="margin-top:14px">
+            <strong>Notitie van Monique:</strong>
+            ${escHtml(zaak.directie_notitie)}
+          </div>
+        ` : ''}
+
+        ${!zaak.op_slot ? `
+          <div class="actie-sectie" style="margin-top:14px">
+            <div class="sectie-label">WWFT-controle</div>
+            <div class="check-rij">
+              <input type="checkbox" class="check-box" id="chk-${zaak.id}"
+                ${zaak.wwft_uitgevoerd ? 'checked' : ''}>
+              <label for="chk-${zaak.id}">Ik heb de WWFT-controle uitgevoerd</label>
+            </div>
+          </div>
+
+          <div class="actie-sectie">
+            <div class="sectie-label">WWFT-bewijs uploaden</div>
+            <div class="upload-zone" id="upload-zone-${zaak.id}" onclick="document.getElementById('file-input-${zaak.id}').click()">
+              <div class="icon">📎</div>
+              <p>Klik om PDF of foto te uploaden</p>
+              <p style="font-size:11px;margin-top:4px">PDF, JPG, PNG — max. 10 MB</p>
+            </div>
+            <input type="file" id="file-input-${zaak.id}" accept=".pdf,.jpg,.jpeg,.png"
+              onchange="uploadBewijs('${zaak.id}', this)">
+            <div id="upload-progress-${zaak.id}"></div>
+          </div>
+        ` : ''}
+
+        <div class="actie-sectie">
+          <div class="sectie-label">Geüploade bestanden</div>
+          <div class="bewijs-lijst" id="bewijs-lijst-${zaak.id}">
+            ${renderBewijsLijst(urls, zaak.id)}
+          </div>
+        </div>
+
+        ${!zaak.op_slot ? `
+          <button class="btn-opslaan" id="btn-${zaak.id}" onclick="slaOp('${zaak.id}')">
+            Wijzigingen opslaan
+          </button>
+          <div class="feedback" id="feedback-${zaak.id}" style="display:none"></div>
+        ` : ''}
+      </div>
+    `;
+    return card;
+  }
+
+  function renderBewijsLijst(urls, zaakId) {
+    if (!urls || urls.length === 0) return '<p style="font-size:13px;color:var(--grijs-tekst)">Nog geen bestanden geüpload.</p>';
+    return urls.map(url => {
+      const naam = url.split('/').pop().replace(/^\d+_/, '');
+      return `<div class="bewijs-item">
+        <a href="${url}" target="_blank" rel="noopener">${escHtml(naam)}</a>
+        <span style="font-size:11px;color:var(--grijs-tekst)">PDF/foto</span>
+      </div>`;
+    }).join('');
+  }
+
+  window.toggleDetail = function(id) {
+    const detail = document.getElementById('detail-' + id);
+    const chevron = document.getElementById('chevron-' + id);
+    const open = detail.classList.contains('zichtbaar');
+    detail.classList.toggle('zichtbaar', !open);
+    chevron.classList.toggle('open', !open);
+  };
+
+  window.uploadBewijs = async function(zaakId, input) {
+    const bestand = input.files[0];
+    if (!bestand) return;
+    if (bestand.size > 10 * 1024 * 1024) {
+      alert('Bestand is groter dan 10 MB. Kies een kleiner bestand.');
+      return;
+    }
+
+    const zone = document.getElementById('upload-zone-' + zaakId);
+    const progressDiv = document.getElementById('upload-progress-' + zaakId);
+    zone.classList.add('uploading');
+    zone.querySelector('p').textContent = 'Uploaden…';
+    progressDiv.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar" style="width:30%"></div></div>';
+
+    const pad = `${huidigGebruiker.id}/${zaakId}_${Date.now()}_${bestand.name}`;
+
+    const { data: upData, error: upErr } = await supabase.storage
+      .from(BUCKET)
+      .upload(pad, bestand, { upsert: false });
+
+    if (upErr) {
+      zone.classList.remove('uploading');
+      zone.querySelector('p').textContent = 'Klik om PDF of foto te uploaden';
+      progressDiv.innerHTML = '<p class="feedback fout" style="display:block">Upload mislukt: ' + escHtml(upErr.message) + '</p>';
+      return;
+    }
+
+    progressDiv.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar" style="width:100%"></div></div>';
+
+    // Signed URL aanmaken (1 jaar geldig)
+    const { data: urlData } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(pad, 365 * 24 * 3600);
+
+    const nieuweUrl = urlData?.signedUrl || upData.path;
+
+    // Haal huidige urls op uit DOM-state en voeg toe
+    const { data: zaakData } = await supabase
+      .from('wwft_zaken')
+      .select('wwft_bewijs_urls')
+      .eq('id', zaakId)
+      .single();
+
+    const bestaandeUrls = Array.isArray(zaakData?.wwft_bewijs_urls) ? zaakData.wwft_bewijs_urls : [];
+    const nieuweUrls = [...bestaandeUrls, nieuweUrl];
+
+    await supabase
+      .from('wwft_zaken')
+      .update({ wwft_bewijs_urls: nieuweUrls })
+      .eq('id', zaakId);
+
+    // UI bijwerken
+    zone.classList.remove('uploading');
+    zone.querySelector('p').textContent = 'Klik om PDF of foto te uploaden';
+    progressDiv.innerHTML = '<p class="feedback ok" style="display:block">✓ Upload geslaagd</p>';
+    setTimeout(() => { progressDiv.innerHTML = ''; }, 3000);
+
+    document.getElementById('bewijs-lijst-' + zaakId).innerHTML = renderBewijsLijst(nieuweUrls, zaakId);
+    input.value = '';
+  };
+
+  window.slaOp = async function(zaakId) {
+    const btn = document.getElementById('btn-' + zaakId);
+    const feedback = document.getElementById('feedback-' + zaakId);
+    const chk = document.getElementById('chk-' + zaakId);
+
+    btn.disabled = true;
+    btn.textContent = 'Opslaan…';
+    feedback.style.display = 'none';
+
+    const { error } = await supabase
+      .from('wwft_zaken')
+      .update({ wwft_uitgevoerd: chk.checked })
+      .eq('id', zaakId)
+      .eq('makelaar_email', huidigGebruiker.email)
+      .eq('op_slot', false);
+
+    btn.disabled = false;
+    btn.textContent = 'Wijzigingen opslaan';
+    feedback.style.display = 'block';
+
+    if (error) {
+      feedback.className = 'feedback fout';
+      feedback.textContent = 'Fout bij opslaan: ' + error.message;
+    } else {
+      feedback.className = 'feedback ok';
+      feedback.textContent = '✓ Opgeslagen';
+      setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+    }
+  };
+
+  function toonFout() {
+    document.getElementById('laadscherm').style.display = 'none';
+    document.getElementById('foutscherm').style.display = 'block';
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
