@@ -467,15 +467,30 @@ function renderDetail(id, m){
         gekozenStatus = s;
         knoppen.querySelectorAll('.sknop').forEach(el=>el.classList.remove('actief'));
         k.classList.add('actief');
+        updateRedenZichtbaar();
       };
       knoppen.appendChild(k);
     });
     beheerEl.appendChild(knoppen);
 
+    const redenLabel = document.createElement('div');
+    redenLabel.className = 'msub';
+    redenLabel.style.margin = '.6rem 0 .35rem';
+    redenLabel.textContent = 'Reden \u2014 dit ziet de melder in de afrondmail.';
+    beheerEl.appendChild(redenLabel);
+
     const ta = document.createElement('textarea');
-    ta.placeholder = 'Notitie voor de melder (wat is er gedaan / waarom niet) \u2014 gaat mee in de mail bij Afgerond of Afgewezen';
+    ta.placeholder = 'Korte toelichting voor de melder: wat is er gedaan, of waarom afgewezen\u2026';
     ta.value = m.directie_notitie || '';
     beheerEl.appendChild(ta);
+
+    // Reden-vak alleen tonen bij Afgerond/Afgewezen; anders zie je enkel 'Bericht aan de melder'
+    const updateRedenZichtbaar = ()=>{
+      const toon = (gekozenStatus === 'afgerond' || gekozenStatus === 'afgewezen');
+      redenLabel.style.display = toon ? 'block' : 'none';
+      ta.style.display = toon ? 'block' : 'none';
+    };
+    updateRedenZichtbaar();
 
     const ok = document.createElement('button');
     ok.className = 'opslaan';
