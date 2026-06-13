@@ -400,6 +400,26 @@ function renderDetail(id, m){
     det.appendChild(af);
   }
 
+  // Berichten-thread (correspondentie directie ↔ melder)
+  if(Array.isArray(m.correspondentie) && m.correspondentie.length){
+    det.appendChild(kop('Berichten'));
+    m.correspondentie.forEach(b=>{
+      const rij = document.createElement('div');
+      rij.className = 'mnotitie';
+      rij.style.marginBottom = '.4rem';
+      const wie = (b.van === 'melder') ? (m.gebruiker_naam || 'Melder') : (b.naam || 'Directie');
+      const wanneer = (b.op||'').slice(0,10).split('-').reverse().join('-');
+      const head = document.createElement('div');
+      head.style.fontSize = '11px'; head.style.color = '#6B6760'; head.style.marginBottom = '.2rem';
+      head.textContent = wie + (wanneer ? ' \u00B7 ' + wanneer : '');
+      const tekstEl = document.createElement('div');
+      tekstEl.style.whiteSpace = 'pre-wrap';
+      tekstEl.textContent = b.tekst || '';
+      rij.appendChild(head); rij.appendChild(tekstEl);
+      det.appendChild(rij);
+    });
+  }
+
   // Transcript inklapbaar
   if(Array.isArray(m.transcript) && m.transcript.length){
     const t = document.createElement('button');
@@ -470,6 +490,45 @@ function renderDetail(id, m){
       }
     };
     beheerEl.appendChild(ok);
+
+    // ── Tussentijds bericht aan de melder (werkt in elke status, mailt direct) ──
+    const berRij = document.createElement('div');
+    berRij.style.marginTop = '.7rem';
+    berRij.style.borderTop = '1px dashed #E2DFD8';
+    berRij.style.paddingTop = '.7rem';
+    const berLabel = document.createElement('div');
+    berLabel.className = 'msub';
+    berLabel.style.marginBottom = '.35rem';
+    berLabel.textContent = 'Bericht aan de melder \u2014 mailt meteen en wordt gelogd, zonder de melding af te ronden.';
+    berRij.appendChild(berLabel);
+    const berTa = document.createElement('textarea');
+    berTa.placeholder = 'Stel een vraag of geef een tussenstand\u2026';
+    berRij.appendChild(berTa);
+    const berBtn = document.createElement('button');
+    berBtn.className = 'opslaan';
+    berBtn.textContent = 'Verstuur bericht';
+    berBtn.onclick = async ()=>{
+      const tekst = berTa.value.trim();
+      if(!tekst){ berTa.focus(); return; }
+      berBtn.disabled = true; berBtn.textContent = 'Versturen\u2026';
+      try{
+        const r = await beheer({ action:'bericht', id, tekst });
+        const rij = alleMeldingen.find(x=>x.id===id);
+        if(rij && r.status){ rij.status = r.status; }
+        if(detailCache[id]){
+          const arr = Array.isArray(detailCache[id].correspondentie) ? detailCache[id].correspondentie : [];
+          if(r.bericht) detailCache[id].correspondentie = [...arr, r.bericht];
+          if(r.status) detailCache[id].status = r.status;
+        }
+        renderFilters();
+        renderLijst();
+      }catch(e){
+        berBtn.disabled = false; berBtn.textContent = 'Verstuur bericht';
+        alert('Versturen mislukte: '+e.message);
+      }
+    };
+    berRij.appendChild(berBtn);
+    beheerEl.appendChild(berRij);
 
     // ── Stuur naar Claude (alleen directie) ──
     const claudeRij = document.createElement('div');
