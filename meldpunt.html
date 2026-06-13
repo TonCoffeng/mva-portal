@@ -91,7 +91,7 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
 .sknop{font-family:inherit;font-size:12px;font-weight:600;border:1.5px solid #E2DFD8;background:#fff;color:#6B6760;border-radius:8px;padding:.4rem .7rem;cursor:pointer}
 .sknop.actief{border-color:#1A2B5F;color:#1A2B5F;background:#E3ECFA}
 .sknop:hover{border-color:#1A2B5F}
-.beheer textarea{width:100%;border:1.5px solid #E2DFD8;border-radius:10px;padding:.6rem .75rem;font-size:13px;font-family:inherit;resize:vertical;min-height:64px;outline:none;background:#fff}
+.beheer textarea{width:100%;border:1.5px solid #E2DFD8;border-radius:10px;padding:.6rem .75rem;font-size:13px;font-family:inherit;resize:vertical;min-height:120px;line-height:1.5;outline:none;background:#fff}
 .beheer textarea:focus{border-color:#1A2B5F}
 .opslaan{margin-top:.5rem;font-family:inherit;font-size:13px;font-weight:600;background:#E8500A;color:#fff;border:none;border-radius:9px;padding:.5rem 1rem;cursor:pointer}
 .opslaan:hover{background:#cf4708}
@@ -515,6 +515,8 @@ function renderDetail(id, m){
     berRij.appendChild(berLabel);
     const berTa = document.createElement('textarea');
     berTa.placeholder = 'Stel een vraag of geef een tussenstand\u2026';
+    berTa.rows = 8;
+    berTa.style.minHeight = '200px';
     berRij.appendChild(berTa);
 
     // Bijlagen voor dit bericht
