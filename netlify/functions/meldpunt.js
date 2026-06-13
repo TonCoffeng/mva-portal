@@ -17,6 +17,9 @@ const MODEL        = 'claude-sonnet-4-6';
 const MELD_MAIL_AAN = 'toncoffeng@makelaarsvan.nl';
 const MAIL_VAN      = 'MvA Meldpunt <noreply@makelaarsvan.nl>';
 const MELDER_REPLY_TO = 'toncoffeng@makelaarsvan.nl'; // replies van melders komen (voorlopig) hier binnen
+// Zodra MELDPUNT_REPLY_DOMAIN is gezet (bv. 'reply.makelaarsvan.nl'), gaan replies
+// via Resend Inbound naar het Meldpunt (reply+<id>@domein) i.p.v. de mailbox hierboven.
+const MELDPUNT_REPLY_DOMAIN = process.env.MELDPUNT_REPLY_DOMAIN || '';
 
 const headers = {
   'Access-Control-Allow-Origin': '*',
@@ -312,6 +315,7 @@ async function beheerActie(body, gebruiker) {
             type:     m.type,
             status:   patch.status,
             notitie:  patch.directie_notitie !== undefined ? patch.directie_notitie : (m.directie_notitie || ''),
+            meldingId: id,
           });
           await sbPatchRow(`meldingen?id=eq.${id}`, { melder_gemaild_op: new Date().toISOString() });
           gemaild = true;
@@ -355,7 +359,7 @@ async function beheerActie(body, gebruiker) {
         const melderRows = await sbSelect(`gebruikers?select=naam,email&id=eq.${m.gebruiker_id}&limit=1`);
         const melder = melderRows[0];
         if (melder && melder.email) {
-          await mailBerichtAanMelder({ melder, titel: m.titel || 'je melding', type: m.type, tekst });
+          await mailBerichtAanMelder({ melder, titel: m.titel || 'je melding', type: m.type, tekst, meldingId: id });
           gemaild = true;
         }
       } catch (e) {
@@ -390,8 +394,14 @@ async function sbPatchRow(pad, patch) {
   if (!r.ok) throw new Error(`patch ${r.status}: ${await r.text()}`);
 }
 
+// Reply-To bepalen: inbound-adres met meldingsnummer zodra het domein is gezet,
+// anders de mailbox. Zo schakelt de hele flow met één env-var om.
+function replyToVoor(id) {
+  return MELDPUNT_REPLY_DOMAIN ? `reply+${id}@${MELDPUNT_REPLY_DOMAIN}` : MELDER_REPLY_TO;
+}
+
 // Nette afrondingsmail naar de melder (huisstijl, één keer per melding).
-async function mailNaarMelder({ melder, titel, type, status, notitie }) {
+async function mailNaarMelder({ melder, titel, type, status, notitie, meldingId }) {
   const labels = { bug: 'bug', tip: 'tip', vraag: 'vraag', anders: 'melding' };
   const soort = labels[type] || 'melding';
   const afgerond = status === 'afgerond';
@@ -415,13 +425,13 @@ async function mailNaarMelder({ melder, titel, type, status, notitie }) {
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: MELDER_REPLY_TO, subject: onderwerp, html }),
+    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: replyToVoor(meldingId), subject: onderwerp, html }),
   });
   if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
 }
 
 // Tussentijds bericht aan de melder (tijdens behandeling, los van afronding).
-async function mailBerichtAanMelder({ melder, titel, type, tekst }) {
+async function mailBerichtAanMelder({ melder, titel, type, tekst, meldingId }) {
   const labels = { bug: 'bug', tip: 'tip', vraag: 'vraag', anders: 'melding' };
   const soort = labels[type] || 'melding';
   const onderwerp = `[Meldpunt] Bericht over je ${soort}: ${titel}`;
@@ -438,7 +448,7 @@ async function mailBerichtAanMelder({ melder, titel, type, tekst }) {
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: MELDER_REPLY_TO, subject: onderwerp, html }),
+    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: replyToVoor(meldingId), subject: onderwerp, html }),
   });
   if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
 }
