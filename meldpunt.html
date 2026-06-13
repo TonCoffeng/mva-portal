@@ -478,18 +478,18 @@ function renderDetail(id, m){
     claudeRij.style.paddingTop = '.7rem';
     const cknop = document.createElement('button');
     cknop.className = 'claudeknop';
-    cknop.textContent = '\u2726 Stuur naar Claude';
+    cknop.textContent = '\u{1F4CB} Kopieer voor Claude';
     cknop.onclick = ()=>{
-      stuurNaarClaude(m, id);
-      const orig = '\u2726 Stuur naar Claude';
-      cknop.textContent = '\u2713 Gekopieerd \u2014 Claude geopend';
+      kopieerVoorClaude(m, id);
+      const orig = '\u{1F4CB} Kopieer voor Claude';
+      cknop.textContent = '\u2713 Op je klembord \u2014 plak in je project';
       setTimeout(()=>{ cknop.textContent = orig; }, 2600);
     };
     claudeRij.appendChild(cknop);
     const cuitleg = document.createElement('div');
     cuitleg.className = 'msub';
     cuitleg.style.marginTop = '.4rem';
-    cuitleg.textContent = 'Opent een nieuw Claude-gesprek met deze melding al ingevuld. De volledige tekst staat ook op je klembord \u2014 plak (Ctrl/Cmd+V) als het venster leeg blijft. Eventuele bijlagen even los meesturen.';
+    cuitleg.textContent = 'Zet de hele melding op je klembord. Plak \u2019m (Ctrl/Cmd+V) in je Claude-project \u2014 daar pak ik \u2019m op, m\u00E9t alle context. Eventuele bijlagen even los meesturen.';
     claudeRij.appendChild(cuitleg);
     beheerEl.appendChild(claudeRij);
 
@@ -547,9 +547,8 @@ Bijlagen: ${bijl.length ? bijl.map(b=>b.naam + (b.url ? ' ('+b.url+')' : '')).jo
   return t;
 }
 
-async function stuurNaarClaude(m, id){
+async function kopieerVoorClaude(m, id){
   const tekst = meldingAlsTekst(m, id);
-  // Volledige tekst (ongekort) naar klembord — vangt af als de URL-prefill inkort.
   try{
     await navigator.clipboard.writeText(tekst);
   }catch(e){
@@ -558,9 +557,6 @@ async function stuurNaarClaude(m, id){
     try{ document.execCommand('copy'); }catch(_){}
     ta.remove();
   }
-  // Nieuw Claude-gesprek met de melding voor-ingevuld (best effort).
-  const url = 'https://claude.ai/new?q=' + encodeURIComponent(tekst);
-  window.open(url, '_blank', 'noopener');
 }
 
 // ── UI helpers (chat) ──
