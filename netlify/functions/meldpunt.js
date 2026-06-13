@@ -16,6 +16,7 @@ const RESEND_KEY    = process.env.RESEND_API_KEY;
 const MODEL        = 'claude-sonnet-4-6';
 const MELD_MAIL_AAN = 'toncoffeng@makelaarsvan.nl';
 const MAIL_VAN      = 'MvA Meldpunt <noreply@makelaarsvan.nl>';
+const MELDER_REPLY_TO = 'toncoffeng@makelaarsvan.nl'; // replies van melders komen (voorlopig) hier binnen
 
 const headers = {
   'Access-Control-Allow-Origin': '*',
@@ -414,7 +415,7 @@ async function mailNaarMelder({ melder, titel, type, status, notitie }) {
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, subject: onderwerp, html }),
+    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: MELDER_REPLY_TO, subject: onderwerp, html }),
   });
   if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
 }
@@ -437,7 +438,7 @@ async function mailBerichtAanMelder({ melder, titel, type, tekst }) {
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, subject: onderwerp, html }),
+    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: MELDER_REPLY_TO, subject: onderwerp, html }),
   });
   if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
 }
