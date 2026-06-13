@@ -322,6 +322,48 @@ async function beheerActie(body, gebruiker) {
     return beheerOk({ ok: true, gemaild });
   }
 
+  if (body.action === 'bericht') {
+    if (!isDirectie) return beheerErr(403, 'Alleen directie kan een bericht sturen');
+    const id = parseInt(body.id);
+    if (!id) return beheerErr(400, 'Geen geldige melding-id');
+    const tekst = (typeof body.tekst === 'string' ? body.tekst : '').trim().slice(0, 4000);
+    if (!tekst) return beheerErr(400, 'Leeg bericht');
+
+    const rows = await sbSelect(
+      `meldingen?select=id,gebruiker_id,type,titel,status,correspondentie&id=eq.${id}&limit=1`
+    );
+    const m = rows[0];
+    if (!m) return beheerErr(404, 'Melding niet gevonden');
+
+    // Bericht loggen in de thread
+    const eerdere = Array.isArray(m.correspondentie) ? m.correspondentie : [];
+    const nieuw = { van: 'directie', naam: gebruiker.naam || 'Directie', tekst, op: new Date().toISOString() };
+    const patch = {
+      correspondentie: [...eerdere, nieuw],
+      bijgewerkt_op: new Date().toISOString(),
+    };
+    // Een bericht sturen betekent: de melding is in behandeling.
+    // Status blijft verder ongemoeid; melder_gemaild_op (afrond-blokkade) raken we niet aan.
+    if (m.status === 'nieuw') { patch.status = 'in_behandeling'; patch.afgehandeld_door = gebruiker.naam; }
+    await sbPatchRow(`meldingen?id=eq.${id}`, patch);
+
+    // Direct mailen naar de melder (los van afronding)
+    let gemaild = false;
+    if (RESEND_KEY) {
+      try {
+        const melderRows = await sbSelect(`gebruikers?select=naam,email&id=eq.${m.gebruiker_id}&limit=1`);
+        const melder = melderRows[0];
+        if (melder && melder.email) {
+          await mailBerichtAanMelder({ melder, titel: m.titel || 'je melding', type: m.type, tekst });
+          gemaild = true;
+        }
+      } catch (e) {
+        console.warn('[meldpunt] bericht-mail mislukt:', e.message);
+      }
+    }
+    return beheerOk({ ok: true, gemaild, bericht: nieuw, status: patch.status || m.status });
+  }
+
   return beheerErr(400, 'Onbekende actie');
 }
 
@@ -368,6 +410,29 @@ async function mailNaarMelder({ melder, titel, type, status, notitie }) {
       <p style="color:#6B6B6B">De volledige status van al je meldingen vind je in het Meldpunt op het portal, tab "Meldingen".</p>
       <hr style="border:none;border-top:1px solid #E7E3DB">
       <p style="font-size:12px;color:#9A9A9A">MvA Meldpunt &middot; bedankt voor het meedenken!</p>
+    </div>`;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, subject: onderwerp, html }),
+  });
+  if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
+}
+
+// Tussentijds bericht aan de melder (tijdens behandeling, los van afronding).
+async function mailBerichtAanMelder({ melder, titel, type, tekst }) {
+  const labels = { bug: 'bug', tip: 'tip', vraag: 'vraag', anders: 'melding' };
+  const soort = labels[type] || 'melding';
+  const onderwerp = `[Meldpunt] Bericht over je ${soort}: ${titel}`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;color:#2A2A2A;max-width:560px">
+      <h2 style="color:#1A2B5F;margin-bottom:4px">Bericht over je melding</h2>
+      <p>Hoi ${escapeHtml(melder.naam || '')},</p>
+      <p>Over je ${soort} <b>"${escapeHtml(titel)}"</b> hebben we het volgende:</p>
+      <p style="color:#444;background:#F6F4EF;border-radius:8px;padding:12px">${escapeHtml(tekst).replace(/\n/g, '<br>')}</p>
+      <p style="color:#6B6B6B">Je vindt dit bericht ook terug in het Meldpunt op het portal, tab "Meldingen".</p>
+      <hr style="border:none;border-top:1px solid #E7E3DB">
+      <p style="font-size:12px;color:#9A9A9A">MvA Meldpunt &middot; we houden je op de hoogte.</p>
     </div>`;
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
