@@ -96,6 +96,8 @@ header{background:#1A2B5F;padding:0 1.25rem;height:60px;display:flex;align-items
 .opslaan{margin-top:.5rem;font-family:inherit;font-size:13px;font-weight:600;background:#E8500A;color:#fff;border:none;border-radius:9px;padding:.5rem 1rem;cursor:pointer}
 .opslaan:hover{background:#cf4708}
 .opslaan:disabled{background:#D8D3C9;cursor:default}
+.claudeknop{font-family:inherit;font-size:13px;font-weight:600;background:#1A2B5F;color:#fff;border:none;border-radius:9px;padding:.5rem 1rem;cursor:pointer}
+.claudeknop:hover{background:#13204a}
 .leeg{font-size:13px;color:#6B6760;text-align:center;padding:2rem 0}
 .transcripttoggle{font-family:inherit;font-size:12px;color:#1A2B5F;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0}
 .transcript{margin-top:.5rem;background:#F6F4EF;border-radius:8px;padding:.6rem .75rem;font-size:12px;white-space:pre-wrap;max-height:260px;overflow-y:auto}
@@ -468,6 +470,29 @@ function renderDetail(id, m){
       }
     };
     beheerEl.appendChild(ok);
+
+    // ── Stuur naar Claude (alleen directie) ──
+    const claudeRij = document.createElement('div');
+    claudeRij.style.marginTop = '.7rem';
+    claudeRij.style.borderTop = '1px dashed #E2DFD8';
+    claudeRij.style.paddingTop = '.7rem';
+    const cknop = document.createElement('button');
+    cknop.className = 'claudeknop';
+    cknop.textContent = '\u2726 Stuur naar Claude';
+    cknop.onclick = ()=>{
+      stuurNaarClaude(m, id);
+      const orig = '\u2726 Stuur naar Claude';
+      cknop.textContent = '\u2713 Gekopieerd \u2014 Claude geopend';
+      setTimeout(()=>{ cknop.textContent = orig; }, 2600);
+    };
+    claudeRij.appendChild(cknop);
+    const cuitleg = document.createElement('div');
+    cuitleg.className = 'msub';
+    cuitleg.style.marginTop = '.4rem';
+    cuitleg.textContent = 'Opent een nieuw Claude-gesprek met deze melding al ingevuld. De volledige tekst staat ook op je klembord \u2014 plak (Ctrl/Cmd+V) als het venster leeg blijft. Eventuele bijlagen even los meesturen.';
+    claudeRij.appendChild(cuitleg);
+    beheerEl.appendChild(claudeRij);
+
     if(m.melder_gemaild_op){
       const info = document.createElement('div');
       info.className = 'msub';
@@ -492,6 +517,50 @@ function renderDetail(id, m){
 
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// ── Melding als kale, plak-klare tekst voor Claude ──
+function meldingAlsTekst(m, id){
+  const bijl = Array.isArray(m.bijlagen) ? m.bijlagen : [];
+  const dat = (m.aangemaakt_op||'').slice(0,10).split('-').reverse().join('-');
+  let t =
+`Melding #${id} uit het MvA Meldpunt
+Type: ${m.type||'anders'} \u00B7 Prioriteit: ${m.prioriteit||'midden'} \u00B7 App: ${m.app||'onbekend'}
+Gemeld door: ${m.gebruiker_naam||'onbekend'} op ${dat}
+Status: ${STATUS_LABEL[m.status]||m.status}
+
+Titel: ${m.titel||'-'}
+
+Samenvatting:
+${m.samenvatting||'-'}
+
+Details:
+${m.details||'-'}
+
+Bijlagen: ${bijl.length ? bijl.map(b=>b.naam + (b.url ? ' ('+b.url+')' : '')).join(', ') : 'geen'}`;
+  if(m.directie_notitie){ t += `\n\nNotitie directie:\n${m.directie_notitie}`; }
+  if(Array.isArray(m.transcript) && m.transcript.length){
+    t += `\n\n--- Volledig gesprek met de melder ---\n` +
+      m.transcript.map(b=>(b.role==='user'?'Melder: ':'Claude: ')+b.content).join('\n\n');
+  }
+  t += `\n\n\u2014 Pak deze melding op: bepaal wat er nodig is en stel concrete vervolgstappen voor.`;
+  return t;
+}
+
+async function stuurNaarClaude(m, id){
+  const tekst = meldingAlsTekst(m, id);
+  // Volledige tekst (ongekort) naar klembord — vangt af als de URL-prefill inkort.
+  try{
+    await navigator.clipboard.writeText(tekst);
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = tekst; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(_){}
+    ta.remove();
+  }
+  // Nieuw Claude-gesprek met de melding voor-ingevuld (best effort).
+  const url = 'https://claude.ai/new?q=' + encodeURIComponent(tekst);
+  window.open(url, '_blank', 'noopener');
 }
 
 // ── UI helpers (chat) ──
