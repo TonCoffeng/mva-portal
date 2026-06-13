@@ -416,6 +416,18 @@ function renderDetail(id, m){
       tekstEl.style.whiteSpace = 'pre-wrap';
       tekstEl.textContent = b.tekst || '';
       rij.appendChild(head); rij.appendChild(tekstEl);
+      if(Array.isArray(b.bijlagen) && b.bijlagen.length){
+        const bl = document.createElement('div');
+        bl.style.marginTop = '.35rem';
+        b.bijlagen.forEach(at=>{
+          const a = document.createElement(at.url ? 'a' : 'span');
+          a.style.cssText = 'display:inline-block;font-size:12px;margin-right:.6rem';
+          if(at.url){ a.href = at.url; a.target = '_blank'; a.rel = 'noopener'; a.style.color = '#1A2B5F'; }
+          a.textContent = '\u{1F4CE} ' + (at.naam || 'bijlage');
+          bl.appendChild(a);
+        });
+        rij.appendChild(bl);
+      }
       det.appendChild(rij);
     });
   }
@@ -504,22 +516,75 @@ function renderDetail(id, m){
     const berTa = document.createElement('textarea');
     berTa.placeholder = 'Stel een vraag of geef een tussenstand\u2026';
     berRij.appendChild(berTa);
+
+    // Bijlagen voor dit bericht
+    let berBijlagen = [];
+    const berChips = document.createElement('div');
+    berChips.style.cssText = 'display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 0';
+    const tekenBerChips = ()=>{
+      berChips.innerHTML = '';
+      berBijlagen.forEach((b)=>{
+        const c = document.createElement('span');
+        c.style.cssText = 'display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #E2DFD8;border-radius:8px;padding:.25rem .55rem;font-size:12px;color:#2A2A2A';
+        c.textContent = (b.bezig ? '\u2026 ' : '\u{1F4CE} ') + b.naam;
+        if(!b.bezig){
+          const x = document.createElement('span');
+          x.textContent = '\u00D7'; x.style.cssText = 'cursor:pointer;color:#B0ACA2;font-weight:600';
+          x.onclick = ()=>{ berBijlagen = berBijlagen.filter(o=>o!==b); tekenBerChips(); };
+          c.appendChild(x);
+        }
+        berChips.appendChild(c);
+      });
+    };
+    berRij.appendChild(berChips);
+
+    const berFile = document.createElement('input');
+    berFile.type = 'file';
+    berFile.accept = 'image/*,application/pdf,.doc,.docx';
+    berFile.multiple = true;
+    berFile.style.display = 'none';
+    berFile.onchange = async ()=>{
+      const files = Array.from(berFile.files || []); berFile.value = '';
+      if(!sb || !authUuid){ alert('Je sessie is verlopen \u2014 log opnieuw in om bijlagen te uploaden.'); return; }
+      for(const f of files){
+        if(f.size > 10*1024*1024){ alert('Bestand te groot (max 10 MB): '+f.name); continue; }
+        const naam = f.name || 'bestand';
+        const pad = authUuid + '/bericht/' + id + '/' + Date.now() + '_' + veiligeNaam(naam);
+        const item = { naam, pad, type: f.type || '', bezig: true };
+        berBijlagen.push(item); tekenBerChips();
+        try{
+          const { error } = await sb.storage.from('meldpunt-bijlagen').upload(pad, f, { contentType: f.type || undefined, upsert: false });
+          if(error) throw error;
+          item.bezig = false;
+        }catch(e){
+          berBijlagen = berBijlagen.filter(o=>o!==item);
+          alert('Upload mislukt voor "'+naam+'": '+(e.message || 'onbekende fout'));
+        }
+        tekenBerChips();
+      }
+    };
+
+    const berActies = document.createElement('div');
+    berActies.style.cssText = 'display:flex;gap:.5rem;align-items:center;margin-top:.4rem';
+    const berClip = document.createElement('button');
+    berClip.type = 'button';
+    berClip.style.cssText = 'font-family:inherit;font-size:13px;border:1.5px solid #E2DFD8;background:#fff;color:#5A564E;border-radius:9px;padding:.5rem .8rem;cursor:pointer';
+    berClip.textContent = '\u{1F4CE} Bijlage';
+    berClip.onclick = ()=> berFile.click();
     const berBtn = document.createElement('button');
     berBtn.className = 'opslaan';
     berBtn.textContent = 'Verstuur bericht';
     berBtn.onclick = async ()=>{
       const tekst = berTa.value.trim();
-      if(!tekst){ berTa.focus(); return; }
+      if(berBijlagen.some(b=>b.bezig)){ alert('Wacht even tot de bijlage klaar is met uploaden.'); return; }
+      const klaar = berBijlagen.filter(b=>!b.bezig);
+      if(!tekst && klaar.length===0){ berTa.focus(); return; }
       berBtn.disabled = true; berBtn.textContent = 'Versturen\u2026';
       try{
-        const r = await beheer({ action:'bericht', id, tekst });
+        const r = await beheer({ action:'bericht', id, tekst, bijlagen: klaar.map(b=>({ naam:b.naam, pad:b.pad, type:b.type })) });
         const rij = alleMeldingen.find(x=>x.id===id);
         if(rij && r.status){ rij.status = r.status; }
-        if(detailCache[id]){
-          const arr = Array.isArray(detailCache[id].correspondentie) ? detailCache[id].correspondentie : [];
-          if(r.bericht) detailCache[id].correspondentie = [...arr, r.bericht];
-          if(r.status) detailCache[id].status = r.status;
-        }
+        delete detailCache[id];   // verse detail ophalen, mét gesignde bijlage-links
         renderFilters();
         renderLijst();
       }catch(e){
@@ -527,7 +592,10 @@ function renderDetail(id, m){
         alert('Versturen mislukte: '+e.message);
       }
     };
-    berRij.appendChild(berBtn);
+    berActies.appendChild(berClip);
+    berActies.appendChild(berBtn);
+    berRij.appendChild(berFile);
+    berRij.appendChild(berActies);
     beheerEl.appendChild(berRij);
 
     // ── Stuur naar Claude (alleen directie) ──
