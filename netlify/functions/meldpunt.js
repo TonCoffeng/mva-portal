@@ -276,7 +276,17 @@ async function beheerActie(body, gebruiker) {
       const url = await signedUrl(b.pad).catch(() => null);
       bijlagen.push({ naam: b.naam || 'bestand', type: b.type || '', url });
     }
-    return beheerOk({ melding: { ...m, bijlagen } });
+    // Signeer ook de bijlagen in de berichten-thread
+    const correspondentie = [];
+    for (const c of (Array.isArray(m.correspondentie) ? m.correspondentie : [])) {
+      const cb = [];
+      for (const b of (Array.isArray(c.bijlagen) ? c.bijlagen : [])) {
+        const url = await signedUrl(b.pad).catch(() => null);
+        cb.push({ naam: b.naam || 'bestand', type: b.type || '', url });
+      }
+      correspondentie.push({ ...c, bijlagen: cb });
+    }
+    return beheerOk({ melding: { ...m, bijlagen, correspondentie } });
   }
 
   if (body.action === 'update') {
@@ -332,7 +342,11 @@ async function beheerActie(body, gebruiker) {
     const id = parseInt(body.id);
     if (!id) return beheerErr(400, 'Geen geldige melding-id');
     const tekst = (typeof body.tekst === 'string' ? body.tekst : '').trim().slice(0, 4000);
-    if (!tekst) return beheerErr(400, 'Leeg bericht');
+    const bijlagenIn = (Array.isArray(body.bijlagen) ? body.bijlagen : [])
+      .filter((b) => b && typeof b.pad === 'string')
+      .slice(0, 5)
+      .map((b) => ({ naam: String(b.naam || 'bestand').slice(0, 120), pad: b.pad, type: String(b.type || '') }));
+    if (!tekst && bijlagenIn.length === 0) return beheerErr(400, 'Leeg bericht');
 
     const rows = await sbSelect(
       `meldingen?select=id,gebruiker_id,type,titel,status,correspondentie&id=eq.${id}&limit=1`
@@ -342,7 +356,7 @@ async function beheerActie(body, gebruiker) {
 
     // Bericht loggen in de thread
     const eerdere = Array.isArray(m.correspondentie) ? m.correspondentie : [];
-    const nieuw = { van: 'directie', naam: gebruiker.naam || 'Directie', tekst, op: new Date().toISOString() };
+    const nieuw = { van: 'directie', naam: gebruiker.naam || 'Directie', tekst, op: new Date().toISOString(), bijlagen: bijlagenIn };
     const patch = {
       correspondentie: [...eerdere, nieuw],
       bijgewerkt_op: new Date().toISOString(),
@@ -359,7 +373,7 @@ async function beheerActie(body, gebruiker) {
         const melderRows = await sbSelect(`gebruikers?select=naam,email&id=eq.${m.gebruiker_id}&limit=1`);
         const melder = melderRows[0];
         if (melder && melder.email) {
-          await mailBerichtAanMelder({ melder, titel: m.titel || 'je melding', type: m.type, tekst, meldingId: id });
+          await mailBerichtAanMelder({ melder, titel: m.titel || 'je melding', type: m.type, tekst, meldingId: id, bijlagen: bijlagenIn });
           gemaild = true;
         }
       } catch (e) {
@@ -431,24 +445,40 @@ async function mailNaarMelder({ melder, titel, type, status, notitie, meldingId 
 }
 
 // Tussentijds bericht aan de melder (tijdens behandeling, los van afronding).
-async function mailBerichtAanMelder({ melder, titel, type, tekst, meldingId }) {
+async function mailBerichtAanMelder({ melder, titel, type, tekst, meldingId, bijlagen }) {
   const labels = { bug: 'bug', tip: 'tip', vraag: 'vraag', anders: 'melding' };
   const soort = labels[type] || 'melding';
   const onderwerp = `[Meldpunt] Bericht over je ${soort}: ${titel}`;
+
+  // Bijlagen: gesignde URL's; Resend haalt ze op bij verzending.
+  const attachments = [];
+  for (const b of (Array.isArray(bijlagen) ? bijlagen : [])) {
+    const url = await signedUrl(b.pad).catch(() => null);
+    if (url) attachments.push({ filename: b.naam || 'bijlage', path: url });
+  }
+  const tekstHtml = tekst
+    ? `<p style="color:#444;background:#F6F4EF;border-radius:8px;padding:12px">${escapeHtml(tekst).replace(/\n/g, '<br>')}</p>`
+    : '';
+  const bijlHtml = attachments.length
+    ? `<p style="color:#6B6B6B">\u{1F4CE} Bijlage(n): ${attachments.map((a) => escapeHtml(a.filename)).join(', ')}</p>`
+    : '';
   const html = `
     <div style="font-family:Arial,sans-serif;color:#2A2A2A;max-width:560px">
       <h2 style="color:#1A2B5F;margin-bottom:4px">Bericht over je melding</h2>
       <p>Hoi ${escapeHtml(melder.naam || '')},</p>
       <p>Over je ${soort} <b>"${escapeHtml(titel)}"</b> hebben we het volgende:</p>
-      <p style="color:#444;background:#F6F4EF;border-radius:8px;padding:12px">${escapeHtml(tekst).replace(/\n/g, '<br>')}</p>
+      ${tekstHtml}
+      ${bijlHtml}
       <p style="color:#6B6B6B">Je vindt dit bericht ook terug in het Meldpunt op het portal, tab "Meldingen".</p>
       <hr style="border:none;border-top:1px solid #E7E3DB">
       <p style="font-size:12px;color:#9A9A9A">MvA Meldpunt &middot; we houden je op de hoogte.</p>
     </div>`;
+  const payload = { from: MAIL_VAN, to: melder.email, reply_to: replyToVoor(meldingId), subject: onderwerp, html };
+  if (attachments.length) payload.attachments = attachments;
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: MAIL_VAN, to: melder.email, reply_to: replyToVoor(meldingId), subject: onderwerp, html }),
+    body: JSON.stringify(payload),
   });
   if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
 }
